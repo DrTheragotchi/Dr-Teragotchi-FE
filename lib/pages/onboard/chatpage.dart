@@ -1,5 +1,8 @@
 import 'package:emogotchi/components/chatbubble.dart';
+import 'package:emogotchi/pages/main/homepage.dart';
+import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
+import 'package:emogotchi/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
@@ -107,6 +110,39 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  Widget getPage(String routeName) {
+    switch (routeName) {
+      case '/homepage':
+        return const HomePage();
+      case '/soulmatepage':
+        return SoulmatePage();
+      default:
+        return const Scaffold(
+          body: Center(child: Text('Page not found')),
+        );
+    }
+  }
+
+  Future<void> fadeTransitionToNamed(
+      BuildContext context, String routeName) async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (!context.mounted) return;
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            getPage(routeName),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
+  }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -129,6 +165,7 @@ class _ChatPageState extends State<ChatPage> {
 
     _scrollToBottom();
 
+    print("current emotion: $_currentEmotion");
     try {
       final apiService = ApiService();
       final response = await apiService.postMessage(
@@ -150,12 +187,22 @@ class _ChatPageState extends State<ChatPage> {
       print("Emotion: ${response['emotion']}");
       print("Animal: ${response['animal']}");
       print("Points: ${response['points']}");
+      print("isFifth: ${response['isFifth']}");
+
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.setUserData(
+        emotion: response['emotion'] ?? '',
+        animal: response['animal'] ?? '',
+        points: response['points'] ?? 0,
+      );
+      print("User data updated");
       // ✅ emotion과 animal이 있으면 SoulmatePage로 이동
-      if (response['animal'] == null && response['isFifth'] != true) {
-        Navigator.pushNamed(context, '/homepage');
+      if (response['animal'] == null && response['isFifth'] != false) {
+        await fadeTransitionToNamed(context, '/rootpage');
       }
-      if (response['animal'] != null && response['isInit'] != true) {
-        Navigator.pushNamed(context, '/soulmatepage');
+
+      if (response['animal'] != null && response['isFifth'] != false) {
+        await fadeTransitionToNamed(context, '/soulmatepage');
       }
     } catch (e) {
       setState(() {

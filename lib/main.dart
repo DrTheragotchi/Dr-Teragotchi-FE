@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         theme: lightTheme,
         initialRoute: '/',
         routes: {
-          '/': (context) => SoulmatePage(),
+          '/': (context) => InitPage(),
           '/onboard': (context) => OnboardPage(),
           '/pigpage': (context) => PigPage(),
           '/tigerpage': (context) => TigerPage(),

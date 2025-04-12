@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 class SettingPage extends StatelessWidget {
   const SettingPage({Key? key}) : super(key: key);
 
-  // Updated helper function for action buttons with optional custom colors
+  // Helper function for action buttons with optional custom colors
   Widget _buildActionButton(
     BuildContext context,
     String text,
@@ -17,16 +17,13 @@ class SettingPage extends StatelessWidget {
       width: double.infinity, // Make button take full width within padding
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ??
-              Colors.grey[100], // Use passed value or default light grey
-          foregroundColor:
-              textColor ?? Colors.black, // Use passed value or default black
+          backgroundColor: backgroundColor ?? Colors.grey[100],
+          foregroundColor: textColor ?? Colors.black,
           elevation: 0, // No shadow
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0), // Rounded corners
           ),
-          padding:
-              const EdgeInsets.symmetric(vertical: 16.0), // Vertical padding
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
         ),
         onPressed: onPressed,
         child: Text(
@@ -45,9 +42,61 @@ class SettingPage extends StatelessWidget {
         text,
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey[600], // Grey color for links
+          color: Colors.grey[600],
         ),
       ),
+    );
+  }
+
+  void _showDeleteAccountConfirmation(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible:
+          false, // Prevent closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: const Text('Delete the account?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Keep the column compact
+            children: [
+              // Display an asset image (update the asset path as needed)
+              Image.asset(
+                'assets/penguin/penguin_sad.png', // Replace with your actual image path
+                height: 100, // Adjust the height as needed
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Do you really want to say GoodBye to ur soulmate?',
+                style: TextStyle(color: Colors.black),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            // Cancel button
+            CupertinoDialogAction(
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.black),
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+            ),
+            // Turn Off button (destructive)
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
+              onPressed: () {
+                // Place your turn-off or delete logic here if desired
+                Navigator.pop(context); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -58,7 +107,6 @@ class SettingPage extends StatelessWidget {
       body: SafeArea(
         // Keeps content below the status bar
         child: Padding(
-          // Horizontal padding for the main content
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -68,21 +116,16 @@ class SettingPage extends StatelessWidget {
 
               // --- Profile Avatar Section ---
               Container(
-                padding:
-                    const EdgeInsets.all(4), // Padding around the CircleAvatar
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.blue, // Blue background color
-                  borderRadius: BorderRadius.circular(
-                      28), // Rounded corners for the square background
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(28),
                 ),
                 child: const CircleAvatar(
-                  radius: 55, // Adjust radius as needed
-                  // Placeholder background color for the avatar
+                  radius: 55,
                   backgroundColor: Colors.white,
-                  // Replace with your actual image loading logic
                   child: Icon(
-                    Icons
-                        .pets, // Placeholder Icon (replace with Image.network or AssetImage)
+                    Icons.pets,
                     size: 60,
                     color: Colors.blue,
                   ),
@@ -90,7 +133,7 @@ class SettingPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               const Text(
-                'nickname', // Replace with actual nickname variable
+                'nickname',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -99,7 +142,7 @@ class SettingPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Level', // Replace with actual level or status
+                'Level',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[500],
@@ -113,7 +156,7 @@ class SettingPage extends StatelessWidget {
               _buildActionButton(context, 'Change nickname', () {
                 // Handle Change nickname action
               }),
-              const SizedBox(height: 16), // Spacing between buttons
+              const SizedBox(height: 16),
               _buildActionButton(context, 'Notification', () {
                 Navigator.push(
                   context,
@@ -130,37 +173,46 @@ class SettingPage extends StatelessWidget {
                 context,
                 'Delete Account',
                 () {
-                  // Handle Delete Account action
+                  // Show the confirmation popup when Delete Account is pressed
+                  _showDeleteAccountConfirmation(context);
                 },
-                backgroundColor: Colors.red, // Set button's background to red
-                textColor: Colors.white, // Set text color to white
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
               ),
 
-              // This pushes the footer links to the bottom
+              // Spacer pushes the footer links to the bottom
               const Spacer(),
 
               // --- Footer Links ---
               Padding(
-                padding: const EdgeInsets.only(
-                    bottom: 20.0), // Space from bottom edge
+                padding: const EdgeInsets.only(bottom: 20.0),
                 child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceEvenly, // Distribute links evenly
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildFooterLink('Terms of Service', () {
-                      /* Handle Terms */
+                      // Handle Terms
                     }),
-                    Text('|',
-                        style: TextStyle(color: Colors.grey[400])), // Separator
+                    Text(
+                      '|',
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
                     _buildFooterLink('Privacy Policy', () {
-                      /* Handle Privacy */
+                      // Handle Privacy
                     }),
-                    Text('|', style: TextStyle(color: Colors.grey[400])),
+                    Text(
+                      '|',
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
                     _buildFooterLink('Bug Report', () {
-                      /* Handle Bug Report */
+                      // Handle Bug Report
                     }),
-                    Text('|', style: TextStyle(color: Colors.grey[400])),
-                    _buildFooterLink('FeedBack', () {/* Handle Feedback */}),
+                    Text(
+                      '|',
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
+                    _buildFooterLink('FeedBack', () {
+                      // Handle Feedback
+                    }),
                   ],
                 ),
               ),

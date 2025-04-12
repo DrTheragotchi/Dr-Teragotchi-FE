@@ -1,6 +1,6 @@
+import 'package:emogotchi/components/home_chat.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
-
 import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
@@ -48,35 +48,16 @@ class _HomePageState extends State<HomePage>
     _tiltAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+  }
 
-    // Hero 전환 끝난 후 애니메이션 시작
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final animation = ModalRoute.of(context)?.animation;
-      if (animation != null) {
-        animation.addStatusListener((status) {
-          if (status == AnimationStatus.completed) {
-            Future.delayed(Duration(milliseconds: 300), () {
-              if (mounted) {
-                _controller.forward().then((_) {
-                  _controller.repeat(reverse: true);
-                  setState(() {
-                    _firstJumpDone = true;
-                  });
-                });
-              }
-            });
-          }
-        });
-      } else {
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            _controller.forward().then((_) {
-              _controller.repeat(reverse: true);
-              setState(() {
-                _firstJumpDone = true;
-              });
-            });
-          }
+  void startPenguinAnimation() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _controller.forward().then((_) {
+          _controller.repeat(reverse: true);
+          setState(() {
+            _firstJumpDone = true;
+          });
         });
       }
     });
@@ -151,11 +132,9 @@ class _HomePageState extends State<HomePage>
                   width: 220,
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Center(
-                    // 전체 가운데 정렬
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        // Progress Bar
                         SizedBox(
                           width: 200,
                           child: ClipRRect(
@@ -169,20 +148,19 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         ),
-
-                        // Rice 이미지
                         Positioned(
-                          left: -8, // 오른쪽에 겹쳐서 붙이기
+                          left: -8,
                           top: -8,
                           child: CircleAvatar(
-                              radius: 15,
-                              backgroundColor:
-                                  Colors.yellowAccent.withOpacity(0.7),
-                              child: Image.asset(
-                                'assets/homepage/rice.png',
-                                height: 30,
-                                width: 30,
-                              )),
+                            radius: 15,
+                            backgroundColor:
+                                Colors.yellowAccent.withOpacity(0.7),
+                            child: Image.asset(
+                              'assets/homepage/rice.png',
+                              height: 30,
+                              width: 30,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -196,40 +174,23 @@ class _HomePageState extends State<HomePage>
             ),
           ),
           Positioned(
-              bottom: 300,
-              left: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, '/chatpage');
-                  HapticFeedback.mediumImpact();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    height: 130,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Feeling better than yesterday?',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )),
+            bottom: 295,
+            left: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                startPenguinAnimation(); // 3초 뒤 애니메이션 시작
+                Navigator.pushNamed(context, '/chatpage');
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: HomeChatBubble(text: 'Hello~'),
+              ),
+            ),
+          ),
           Positioned(
-            bottom: 30,
+            bottom: 105,
             left: 0,
             right: 0,
             child: Center(
@@ -254,7 +215,7 @@ class _HomePageState extends State<HomePage>
       height: 45,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
-        mainAxisSize: MainAxisSize.min, // <<< 중요: 내용 크기만큼 너비 설정
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircleAvatar(
