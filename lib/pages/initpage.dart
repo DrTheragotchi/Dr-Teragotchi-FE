@@ -1,3 +1,4 @@
+import 'package:emogotchi/pages/settingpage.dart';
 import 'package:flutter/material.dart';
 
 class InitPage extends StatelessWidget {
@@ -5,6 +6,22 @@ class InitPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Initialization Page'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            // Navigate to the next page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingPage()),
+            );
+          },
+          child: const Text('Go to Settings'),
+        ),
+      ),
+    );
   }
 }

@@ -15,5 +15,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
 
+  flutter_feather_icons: ^2.0.0
+  path_provider: ^2.1.2
+  provider:
+
 flutter:
   uses-material-design: true
