@@ -1,10 +1,11 @@
-import 'package:emogotchi/pages/settingpage.dart';
+import 'package:emogotchi/const/theme/theme.dart';
+import 'package:emogotchi/pages/initpage.dart';
+import 'package:emogotchi/provider/user_provider.dart';
 import 'package:flutter/material.dart';
-// Import the SettingPage class from its file
-
+import 'package:provider/provider.dart'; // Ensure 'provider' is added in pubspec.yaml
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -12,46 +13,38 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        // You might want to set the default scaffold background color
-        // if you want consistency across pages before navigation
-        // scaffoldBackgroundColor: Colors.grey[50],
-      ),
-      // Define the home page
-      home: const HomePage(),
-    );
-  }
-}
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => UserProvider()),
 
-// A simple example home page
-class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+        // ChangeNotifierProvider(create: (context) => ClassGrouping()),
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-        actions: [
-          // Add an icon button to the AppBar
-          IconButton(
-            icon: const Icon(Icons.settings), // Settings icon
-            tooltip: 'Open Settings',
-            onPressed: () {
-              // Action to navigate to SettingPage
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingPage()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Text('This is the Home Page.\nTap the settings icon in the AppBar.'),
+        // // ChangeNotifierProvider(
+        // //   create: (context) => SemestersProvider(preloadedSemesters),
+        // // ),
+        // // ChangeNotifierProvider(
+        // //   create: (context) => SavedSemesterProvider(semester),
+        // // ),
+
+        // /* --- 아래는 정상 ---- */
+        // ChangeNotifierProvider(create: (_) => CurrentIndexProvider()),
+        // ChangeNotifierProvider(create: (_) => FriendsProvider()),
+        // /* --- course & personasl info provider ====  */
+        // ChangeNotifierProvider(create: (_) => SemesterProvider()),
+        // ChangeNotifierProvider(create: (context) => CourseColorProvider()),
+
+        // ChangeNotifierProvider(create: (context) => DepartmentProvider()),
+        // ChangeNotifierProvider(create: (context) => InstitutionProvider()),
+        // ChangeNotifierProvider(create: (context) => UserInfoProvider()),
+        // ChangeNotifierProvider(create: (context) => AdminProvider()),
+        // ChangeNotifierProvider(create: (context) => ShowAdProvider()),
+        // ChangeNotifierProvider(create: (context) => AppIconProvider()),
+        // ChangeNotifierProvider(create: (context) => MyCodeProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: lightTheme,
+        home: InitPage(),
       ),
     );
   }
