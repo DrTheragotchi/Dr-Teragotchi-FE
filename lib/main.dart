@@ -10,6 +10,7 @@ import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/pages/onboard/tiger.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/pages/rootpage.dart';
+import 'package:emogotchi/provider/background_provider.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(create: (context) => DeviceInfoProvider()),
         ChangeNotifierProvider(create: (context) => EmotionProvider()),
+        ChangeNotifierProvider(create: (context) => BackgroundProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

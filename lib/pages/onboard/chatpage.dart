@@ -1,6 +1,7 @@
 import 'package:emogotchi/components/chatbubble.dart';
 import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
+import 'package:emogotchi/pages/rootpage.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter_chat_bubble/bubble_type.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({Key? key}) : super(key: key);
+  final bool isInit;
+  const ChatPage({Key? key, this.isInit = false}) : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -92,7 +94,6 @@ class _ChatPageState extends State<ChatPage> {
       if (initMessagesList.isNotEmpty) {
         final randomIndex = (initMessagesList.length * 0.5).toInt();
 
-        // ✅ 약간 기다렸다가 메시지 출력
         await Future.delayed(const Duration(seconds: 2)); // 생각 중 표시 시간
 
         setState(() {
@@ -112,8 +113,8 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget getPage(String routeName) {
     switch (routeName) {
-      case '/homepage':
-        return const HomePage();
+      case '/rootpage':
+        return const RootPage();
       case '/soulmatepage':
         return SoulmatePage();
       default:
@@ -166,6 +167,13 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
 
     print("current emotion: $_currentEmotion");
+
+    if (widget.isInit == false) {
+      setState(() {
+        _currentEmotion = '';
+      });
+    }
+
     try {
       final apiService = ApiService();
       final response = await apiService.postMessage(

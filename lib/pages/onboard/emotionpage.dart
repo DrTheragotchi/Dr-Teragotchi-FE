@@ -47,7 +47,7 @@ class _EmotionPageState extends State<EmotionPage> {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 500),
-        pageBuilder: (_, __, ___) => const ChatPage(),
+        pageBuilder: (_, __, ___) => const ChatPage(isInit: true),
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },
