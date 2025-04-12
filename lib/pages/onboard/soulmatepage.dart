@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:emogotchi/pages/rootpage.dart';
 import 'package:flutter/material.dart';
-import 'package:emogotchi/pages/main/homepage.dart';
+import 'package:emogotchi/provider/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class SoulmatePage extends StatefulWidget {
   @override
@@ -9,12 +11,32 @@ class SoulmatePage extends StatefulWidget {
 }
 
 class _SoulmatePageState extends State<SoulmatePage> {
+  bool _isEyeOpen = true;
+  Timer? _blinkTimer;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.of(context).pushReplacement(_createFadeRoute());
     });
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.emotion == 'neutral') {
+      _blinkTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            _isEyeOpen = !_isEyeOpen;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _blinkTimer?.cancel();
+    super.dispose();
   }
 
   Route _createFadeRoute() {
@@ -26,15 +48,23 @@ class _SoulmatePageState extends State<SoulmatePage> {
           child: child,
         );
       },
-      transitionDuration: Duration(milliseconds: 800),
+      transitionDuration: const Duration(milliseconds: 800),
     );
   }
 
-  Widget _penguinImage() {
+  Widget _animalImage(String animalType, String emotion) {
+    String imagePath;
+    if (emotion == 'neutral') {
+      final eyeState = _isEyeOpen ? 'eye_open' : 'eye_close';
+      imagePath = 'assets/$animalType/${animalType}_$eyeState.png';
+    } else {
+      imagePath = 'assets/$animalType/${animalType}_${emotion}.png';
+    }
+
     return SizedBox(
       height: 300,
       child: Image.asset(
-        'assets/penguin/penguin_happy.png',
+        imagePath,
         fit: BoxFit.contain,
       ),
     );
@@ -47,29 +77,35 @@ class _SoulmatePageState extends State<SoulmatePage> {
     BuildContext fromHeroContext,
     BuildContext toHeroContext,
   ) {
-    return _penguinImage();
+    final userProvider =
+        Provider.of<UserProvider>(flightContext, listen: false);
+    return _animalImage(userProvider.animalType, userProvider.emotion);
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final animalType = userProvider.animalType;
+    final emotion = userProvider.emotion;
+
     return Scaffold(
       body: ColorfulSafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 'Your soulmate is...',
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Hero(
                 tag: 'penguinHero',
                 flightShuttleBuilder: _flightShuttleBuilder,
-                child: _penguinImage(),
+                child: _animalImage(animalType, emotion),
               ),
             ],
           ),

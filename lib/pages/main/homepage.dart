@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:emogotchi/components/home_chat.dart';
 import 'package:emogotchi/provider/background_provider.dart';
+import 'package:emogotchi/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -18,6 +21,13 @@ class _HomePageState extends State<HomePage>
   late Animation<double> _moveAnimation;
   late Animation<double> _tiltAnimation;
   late String selectedMessage;
+
+  /* ------------------------------ */
+  late String animalType;
+  late String animalMood;
+  late int points;
+  bool _isEyeOpen = true;
+  Timer? _blinkTimer;
 
   bool _firstJumpDone = false;
 
@@ -87,15 +97,33 @@ class _HomePageState extends State<HomePage>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Navigator.pop 후 다시 돌아올 때도 여기 호출됨
     if (!_controller.isAnimating && _firstJumpDone) {
       _controller.forward().then((_) {
         _controller.repeat(reverse: true);
       });
     }
+
+    final userInfoProvider = Provider.of<UserProvider>(context, listen: false);
+    animalMood = userInfoProvider.getEmotion;
+    animalType = userInfoProvider.getAnimalType;
+    points = userInfoProvider.getPoints;
+
+    print('animalType: $animalType');
+    print('animalMood: $animalMood');
+    print('points: $points');
+
+    if (animalMood == 'neutral' && _blinkTimer == null) {
+      _blinkTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            _isEyeOpen = !_isEyeOpen;
+          });
+        }
+      });
+    }
   }
 
-  void startPenguinAnimation() {
+  void startAnimalAnimation() {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         _controller.forward().then((_) {
@@ -108,9 +136,18 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  Widget _penguinImage({bool animated = true}) {
+  Widget _animalImage({bool animated = true}) {
+    String imagePath;
+
+    if (animalMood == 'neutral') {
+      final eyeState = _isEyeOpen ? 'eye_open' : 'eye_close';
+      imagePath = 'assets/$animalType/${animalType}_$eyeState.png';
+    } else {
+      imagePath = 'assets/$animalType/${animalType}_${animalMood}.png';
+    }
+
     final image = Image.asset(
-      'assets/penguin/penguin_happy.png',
+      imagePath,
       fit: BoxFit.contain,
     );
 
@@ -141,11 +178,12 @@ class _HomePageState extends State<HomePage>
     BuildContext fromHeroContext,
     BuildContext toHeroContext,
   ) {
-    return _penguinImage(animated: false);
+    return _animalImage(animated: false);
   }
 
   @override
   void dispose() {
+    _blinkTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -229,7 +267,7 @@ class _HomePageState extends State<HomePage>
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.mediumImpact();
-                startPenguinAnimation();
+                startAnimalAnimation();
                 Navigator.pushNamed(context, '/chatpage', arguments: {
                   'emotion': '',
                 });
@@ -248,7 +286,7 @@ class _HomePageState extends State<HomePage>
               child: Hero(
                 tag: 'penguinHero',
                 flightShuttleBuilder: _flightShuttleBuilder,
-                child: _penguinImage(),
+                child: _animalImage(),
               ),
             ),
           ),
