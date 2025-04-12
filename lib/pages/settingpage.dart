@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
+import 'NotificationSettingPage.dart';
+import 'package:flutter/cupertino.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({Key? key}) : super(key: key);
 
-  // Helper function for the action buttons
-  Widget _buildActionButton(BuildContext context, String text, VoidCallback onPressed) {
+  // Updated helper function for action buttons with optional custom colors
+  Widget _buildActionButton(
+    BuildContext context,
+    String text,
+    VoidCallback onPressed, {
+    Color? backgroundColor,
+    Color? textColor,
+  }) {
     return SizedBox(
       width: double.infinity, // Make button take full width within padding
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[100], // Light grey background
-          foregroundColor: Colors.black, // Text color
+          backgroundColor: backgroundColor ?? Colors.grey[100], // Use passed value or default light grey
+          foregroundColor: textColor ?? Colors.black, // Use passed value or default black
           elevation: 0, // No shadow
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0), // Rounded corners
@@ -44,7 +52,7 @@ class SettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // White background
-      body: SafeArea( // Keeps content below status bar
+      body: SafeArea( // Keeps content below the status bar
         child: Padding(
           // Horizontal padding for the main content
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -70,11 +78,7 @@ class SettingPage extends StatelessWidget {
                     Icons.pets, // Placeholder Icon (replace with Image.network or AssetImage)
                     size: 60,
                     color: Colors.blue,
-                  )
-                  // Example using an image asset:
-                  // backgroundImage: AssetImage('assets/your_avatar_image.png'),
-                  // Example using a network image:
-                  // backgroundImage: NetworkImage('URL_TO_YOUR_AVATAR_IMAGE'),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -104,24 +108,31 @@ class SettingPage extends StatelessWidget {
               }),
               const SizedBox(height: 16), // Spacing between buttons
               _buildActionButton(context, 'Notification', () {
-                // Handle Notification action/navigation
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotificationSettingsPage()),
+                );
               }),
               const SizedBox(height: 16),
               _buildActionButton(context, 'Support', () {
-                // Handle Delete account action
-              }),
-              const SizedBox(height: 16),
-              _buildActionButton(context, 'Delete Account', () {
                 // Handle Support action
               }),
+              const SizedBox(height: 16),
+              _buildActionButton(
+                context,
+                'Delete Account',
+                () {
+                  // Handle Delete Account action
+                },
+                backgroundColor: Colors.red,  // Set button's background to red
+                textColor: Colors.white,      // Set text color to white
+              ),
 
               // This pushes the footer links to the bottom
               const Spacer(),
 
               // --- Footer Links ---
               Padding(
-                 // Extra horizontal padding for footer if needed, or keep it aligned
-                 // padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 padding: const EdgeInsets.only(bottom: 20.0), // Space from bottom edge
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute links evenly
@@ -129,9 +140,9 @@ class SettingPage extends StatelessWidget {
                     _buildFooterLink('Terms of Service', () { /* Handle Terms */ }),
                     Text('|', style: TextStyle(color: Colors.grey[400])), // Separator
                     _buildFooterLink('Privacy Policy', () { /* Handle Privacy */ }),
-                     Text('|', style: TextStyle(color: Colors.grey[400])),
+                    Text('|', style: TextStyle(color: Colors.grey[400])),
                     _buildFooterLink('Bug Report', () { /* Handle Bug Report */ }),
-                     Text('|', style: TextStyle(color: Colors.grey[400])),
+                    Text('|', style: TextStyle(color: Colors.grey[400])),
                     _buildFooterLink('FeedBack', () { /* Handle Feedback */ }),
                   ],
                 ),
