@@ -1,2 +1,3 @@
-# Emogotchi-FE
-Emogotchi Front end
+# emogotchi
+
+A new Flutter project.
