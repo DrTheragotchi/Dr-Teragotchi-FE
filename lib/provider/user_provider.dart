@@ -2,24 +2,34 @@ import 'package:flutter/material.dart';
 
 class UserProvider with ChangeNotifier {
   String _userName = '';
-  int _userAge = 0;
-
+  String uuid = '';
+  String animalType = '';
+  String animalLevel = '';
+  String emotion = '';
   String get userName => _userName;
-  int get userAge => _userAge;
 
   void setUserName(String name) {
     _userName = name;
     notifyListeners();
   }
 
-  void setUserAge(int age) {
-    _userAge = age;
+  void setUuid(String id) {
+    uuid = id;
     notifyListeners();
   }
 
-  void resetUser() {
-    _userName = '';
-    _userAge = 0;
+  void setAnimalType(String type) {
+    animalType = type;
+    notifyListeners();
+  }
+
+  void setAnimalLevel(String level) {
+    animalLevel = level;
+    notifyListeners();
+  }
+
+  void setEmotion(String newEmotion) {
+    emotion = newEmotion;
     notifyListeners();
   }
 }
