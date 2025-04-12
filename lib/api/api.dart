@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "http://emogotchi.tech";
+  final String baseUrl = "http://10.175.118.64:8000";
 
   Future<Map<String, dynamic>> postOnboarding(
       String uuid, String nickname) async {
@@ -47,6 +47,8 @@ class ApiService {
           'response': responseData['response'] ?? '',
           'emotion': responseData['emotion'], // may be null
           'animal': responseData['animal'], // may be null
+          'points': responseData['points'],
+          'isFifth': responseData['isFifth'] ?? false,
         };
       } else {
         throw Exception('Failed to post message: ${response.statusCode}');

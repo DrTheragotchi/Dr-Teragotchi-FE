@@ -20,6 +20,8 @@ class _ChatPageState extends State<ChatPage> {
 
   late String _uuid = '';
   late String _currentEmotion = '';
+  late String _currentAnimal = '';
+  late int _currentPoints = 0;
   bool _isThinking = false;
 
   final Map<String, List<String>> initMessages = {
@@ -147,8 +149,12 @@ class _ChatPageState extends State<ChatPage> {
       print("Response: ${response['response']}");
       print("Emotion: ${response['emotion']}");
       print("Animal: ${response['animal']}");
+      print("Points: ${response['points']}");
       // ✅ emotion과 animal이 있으면 SoulmatePage로 이동
-      if (response['emotion'] != null && response['animal'] != null) {
+      if (response['animal'] == null && response['isFifth'] != true) {
+        Navigator.pushNamed(context, '/homepage');
+      }
+      if (response['animal'] != null && response['isInit'] != true) {
         Navigator.pushNamed(context, '/soulmatepage');
       }
     } catch (e) {

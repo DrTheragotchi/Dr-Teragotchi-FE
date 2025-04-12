@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:flutter/services.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -124,41 +126,6 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    Widget statusButton() {
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        height: 40,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 15,
-                backgroundColor: Colors.orangeAccent,
-                child: Image.asset(
-                  'assets/homepage/streak.png',
-                  height: 30,
-                  width: 30,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                '1000',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -171,89 +138,96 @@ class _HomePageState extends State<HomePage>
             top: 60,
             left: 20,
             right: 20,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // 레벨 표시
-                const Text(
-                  'LV: 5',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      SizedBox(
-                        width: 220, // 원하는 가로 길이
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: LinearProgressIndicator(
-                            value: 0.7,
-                            minHeight: 12,
-                            backgroundColor: Colors.white24,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.orangeAccent),
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 0, bottom: 0),
-                          child: Image.asset(
-                            'assets/homepage/rice.png',
-                            height: 30,
-                            width: 30,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  height: 40,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  height: 45,
+                  width: 220,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Center(
+                    // 전체 가운데 정렬
+                    child: Stack(
+                      clipBehavior: Clip.none,
                       children: [
-                        CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.orangeAccent,
-                          child: Image.asset(
-                            'assets/homepage/streak.png',
-                            height: 30,
-                            width: 30,
+                        // Progress Bar
+                        SizedBox(
+                          width: 200,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: 0.5,
+                              minHeight: 15,
+                              backgroundColor: Colors.grey.withOpacity(0.3),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.orangeAccent),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 4),
+
+                        // Rice 이미지
+                        Positioned(
+                          left: -8, // 오른쪽에 겹쳐서 붙이기
+                          top: -8,
+                          child: CircleAvatar(
+                              radius: 15,
+                              backgroundColor:
+                                  Colors.yellowAccent.withOpacity(0.7),
+                              child: Image.asset(
+                                'assets/homepage/rice.png',
+                                height: 30,
+                                width: 30,
+                              )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                StatusButton(false),
+                const SizedBox(height: 6),
+                StatusButton(true),
+              ],
+            ),
+          ),
+          Positioned(
+              bottom: 300,
+              left: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/chatpage');
+                  HapticFeedback.mediumImpact();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    height: 130,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                         const Text(
-                          '1000',
+                          'Feeling better than yesterday?',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              )),
           Positioned(
             bottom: 30,
             left: 0,
@@ -264,6 +238,50 @@ class _HomePageState extends State<HomePage>
                 flightShuttleBuilder: _flightShuttleBuilder,
                 child: _penguinImage(),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget StatusButton(bool isStreak, {String value = '10'}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      height: 45,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min, // <<< 중요: 내용 크기만큼 너비 설정
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 15,
+            backgroundColor: isStreak
+                ? Colors.orangeAccent.withOpacity(0.7)
+                : Colors.blue.withOpacity(0.7),
+            child: isStreak
+                ? Image.asset(
+                    'assets/homepage/streak.png',
+                    height: 30,
+                    width: 30,
+                  )
+                : const Text(
+                    'LV',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
             ),
           ),
         ],

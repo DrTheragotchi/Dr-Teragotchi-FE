@@ -1,5 +1,5 @@
 import 'package:emogotchi/const/theme/theme.dart';
-import 'package:emogotchi/pages/homepage.dart';
+import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/initpage.dart';
 import 'package:emogotchi/pages/onboard/chatpage.dart';
 import 'package:emogotchi/pages/onboard/emotionpage.dart';
@@ -9,6 +9,7 @@ import 'package:emogotchi/pages/onboard/pig.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/pages/onboard/tiger.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
+import 'package:emogotchi/pages/rootpage.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
           '/pigpage': (context) => PigPage(),
           '/tigerpage': (context) => TigerPage(),
           '/penguinpage': (context) => PenguinPage(),
+          '/rootpage': (context) => RootPage(),
           '/homepage': (context) => HomePage(),
           '/namepage': (context) => NamePage(),
           '/chatpage': (context) => ChatPage(),

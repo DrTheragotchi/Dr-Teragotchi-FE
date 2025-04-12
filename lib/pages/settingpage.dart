@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'notificationSettingPage.dart';
+import 'main/notificationSettingPage.dart';
 import 'package:flutter/cupertino.dart';
 
 class SettingPage extends StatelessWidget {

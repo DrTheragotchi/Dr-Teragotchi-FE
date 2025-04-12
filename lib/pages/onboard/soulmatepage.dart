@@ -1,6 +1,7 @@
 import 'package:colorful_safe_area/colorful_safe_area.dart';
+import 'package:emogotchi/pages/rootpage.dart';
 import 'package:flutter/material.dart';
-import 'package:emogotchi/pages/homepage.dart';
+import 'package:emogotchi/pages/main/homepage.dart';
 
 class SoulmatePage extends StatefulWidget {
   @override
@@ -18,7 +19,7 @@ class _SoulmatePageState extends State<SoulmatePage> {
 
   Route _createFadeRoute() {
     return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => HomePage(),
+      pageBuilder: (context, animation, secondaryAnimation) => RootPage(),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(
           opacity: animation,
