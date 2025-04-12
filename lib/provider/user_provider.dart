@@ -6,7 +6,14 @@ class UserProvider with ChangeNotifier {
   String animalType = '';
   String animalLevel = '';
   String emotion = '';
+  bool isNotified = false;
+
   String get userName => _userName;
+  String get getUuid => uuid;
+  String get getAnimalType => animalType;
+  String get getAnimalLevel => animalLevel;
+  String get getEmotion => emotion;
+  bool get getIsNotified => isNotified;
 
   void setUserName(String name) {
     _userName = name;
