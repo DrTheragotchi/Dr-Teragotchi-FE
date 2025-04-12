@@ -6,6 +6,7 @@ import 'package:emogotchi/pages/onboard/emotionpage.dart';
 import 'package:emogotchi/pages/onboard/nickname.dart';
 import 'package:emogotchi/pages/onboard/onboard.dart';
 import 'package:emogotchi/pages/onboard/pig.dart';
+import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/pages/onboard/tiger.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
           '/namepage': (context) => NamePage(),
           '/chatpage': (context) => ChatPage(),
           '/emotionpage': (context) => EmotionPage(),
+          '/soulmatepage': (context) => SoulmatePage(),
         },
       ),
     );

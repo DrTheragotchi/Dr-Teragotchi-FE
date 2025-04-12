@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'NotificationSettingPage.dart';
+import 'notificationSettingPage.dart';
 import 'package:flutter/cupertino.dart';
 
 class SettingPage extends StatelessWidget {
@@ -17,13 +17,16 @@ class SettingPage extends StatelessWidget {
       width: double.infinity, // Make button take full width within padding
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? Colors.grey[100], // Use passed value or default light grey
-          foregroundColor: textColor ?? Colors.black, // Use passed value or default black
+          backgroundColor: backgroundColor ??
+              Colors.grey[100], // Use passed value or default light grey
+          foregroundColor:
+              textColor ?? Colors.black, // Use passed value or default black
           elevation: 0, // No shadow
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0), // Rounded corners
           ),
-          padding: const EdgeInsets.symmetric(vertical: 16.0), // Vertical padding
+          padding:
+              const EdgeInsets.symmetric(vertical: 16.0), // Vertical padding
         ),
         onPressed: onPressed,
         child: Text(
@@ -52,7 +55,8 @@ class SettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // White background
-      body: SafeArea( // Keeps content below the status bar
+      body: SafeArea(
+        // Keeps content below the status bar
         child: Padding(
           // Horizontal padding for the main content
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -64,10 +68,12 @@ class SettingPage extends StatelessWidget {
 
               // --- Profile Avatar Section ---
               Container(
-                padding: const EdgeInsets.all(4), // Padding around the CircleAvatar
+                padding:
+                    const EdgeInsets.all(4), // Padding around the CircleAvatar
                 decoration: BoxDecoration(
                   color: Colors.blue, // Blue background color
-                  borderRadius: BorderRadius.circular(28), // Rounded corners for the square background
+                  borderRadius: BorderRadius.circular(
+                      28), // Rounded corners for the square background
                 ),
                 child: const CircleAvatar(
                   radius: 55, // Adjust radius as needed
@@ -75,7 +81,8 @@ class SettingPage extends StatelessWidget {
                   backgroundColor: Colors.white,
                   // Replace with your actual image loading logic
                   child: Icon(
-                    Icons.pets, // Placeholder Icon (replace with Image.network or AssetImage)
+                    Icons
+                        .pets, // Placeholder Icon (replace with Image.network or AssetImage)
                     size: 60,
                     color: Colors.blue,
                   ),
@@ -110,7 +117,8 @@ class SettingPage extends StatelessWidget {
               _buildActionButton(context, 'Notification', () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const NotificationSettingsPage()),
+                  MaterialPageRoute(
+                      builder: (context) => const NotificationSettingsPage()),
                 );
               }),
               const SizedBox(height: 16),
@@ -124,8 +132,8 @@ class SettingPage extends StatelessWidget {
                 () {
                   // Handle Delete Account action
                 },
-                backgroundColor: Colors.red,  // Set button's background to red
-                textColor: Colors.white,      // Set text color to white
+                backgroundColor: Colors.red, // Set button's background to red
+                textColor: Colors.white, // Set text color to white
               ),
 
               // This pushes the footer links to the bottom
@@ -133,17 +141,26 @@ class SettingPage extends StatelessWidget {
 
               // --- Footer Links ---
               Padding(
-                padding: const EdgeInsets.only(bottom: 20.0), // Space from bottom edge
+                padding: const EdgeInsets.only(
+                    bottom: 20.0), // Space from bottom edge
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute links evenly
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceEvenly, // Distribute links evenly
                   children: [
-                    _buildFooterLink('Terms of Service', () { /* Handle Terms */ }),
-                    Text('|', style: TextStyle(color: Colors.grey[400])), // Separator
-                    _buildFooterLink('Privacy Policy', () { /* Handle Privacy */ }),
+                    _buildFooterLink('Terms of Service', () {
+                      /* Handle Terms */
+                    }),
+                    Text('|',
+                        style: TextStyle(color: Colors.grey[400])), // Separator
+                    _buildFooterLink('Privacy Policy', () {
+                      /* Handle Privacy */
+                    }),
                     Text('|', style: TextStyle(color: Colors.grey[400])),
-                    _buildFooterLink('Bug Report', () { /* Handle Bug Report */ }),
+                    _buildFooterLink('Bug Report', () {
+                      /* Handle Bug Report */
+                    }),
                     Text('|', style: TextStyle(color: Colors.grey[400])),
-                    _buildFooterLink('FeedBack', () { /* Handle Feedback */ }),
+                    _buildFooterLink('FeedBack', () {/* Handle Feedback */}),
                   ],
                 ),
               ),

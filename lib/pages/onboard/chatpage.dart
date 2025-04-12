@@ -20,6 +20,7 @@ class _ChatPageState extends State<ChatPage> {
 
   late String _uuid = '';
   late String _currentEmotion = '';
+  bool _isThinking = false;
 
   final Map<String, List<String>> initMessages = {
     "happy": [
@@ -61,6 +62,10 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _initializeChatSetup() async {
+    setState(() {
+      _isThinking = true;
+    });
+
     final deviceInfoProvider =
         Provider.of<DeviceInfoProvider>(context, listen: false);
     final emotionProvider =
@@ -74,31 +79,29 @@ class _ChatPageState extends State<ChatPage> {
     final fetchedUuid = deviceInfoProvider.uuid;
     final fetchedEmotion = emotionProvider.emotion;
 
-    print("Fetched UUID: $fetchedUuid");
-    print("Fetched Emotion: $fetchedEmotion");
-
     if (fetchedUuid != null && fetchedEmotion != null) {
-      setState(() {
-        _uuid = fetchedUuid;
-        _currentEmotion = fetchedEmotion.toLowerCase();
+      _uuid = fetchedUuid;
+      _currentEmotion = fetchedEmotion.toLowerCase();
 
-        final initMessagesList = initMessages[_currentEmotion] ?? [];
-        if (initMessagesList.isNotEmpty) {
-          final randomIndex =
-              (initMessagesList.length * 0.5).toInt(); // 또는 Random().nextInt
+      final initMessagesList = initMessages[_currentEmotion] ?? [];
+      if (initMessagesList.isNotEmpty) {
+        final randomIndex = (initMessagesList.length * 0.5).toInt();
 
-          print("Random Index: $randomIndex");
+        // ✅ 약간 기다렸다가 메시지 출력
+        await Future.delayed(const Duration(seconds: 2)); // 생각 중 표시 시간
+
+        setState(() {
+          _isThinking = false;
           _messages.add({
             'sender': 'bot',
             'text': initMessagesList[randomIndex],
           });
-        }
-      });
+        });
 
-      // 첫 메시지 이후 스크롤 아래로 이동
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+        });
+      }
     }
   }
 
@@ -119,23 +122,38 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       _messages.add({'sender': 'user', 'text': message});
       _messageController.clear();
+      _isThinking = true;
     });
 
     _scrollToBottom();
 
     try {
       final apiService = ApiService();
-      final responseMessage = await apiService.postMessage(message, _uuid);
+      final response = await apiService.postMessage(
+        message,
+        _uuid,
+        _currentEmotion.toUpperCase(),
+      );
 
       setState(() {
-        _messages.add({'sender': 'bot', 'text': responseMessage});
+        _isThinking = false;
+        _messages.add({'sender': 'bot', 'text': response['response'] ?? ''});
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
+
+      print("Response: ${response['response']}");
+      print("Emotion: ${response['emotion']}");
+      print("Animal: ${response['animal']}");
+      // ✅ emotion과 animal이 있으면 SoulmatePage로 이동
+      if (response['emotion'] != null && response['animal'] != null) {
+        Navigator.pushNamed(context, '/soulmatepage');
+      }
     } catch (e) {
       setState(() {
+        _isThinking = false;
         _messages.add({'sender': 'bot', 'text': 'Error: $e'});
       });
 
