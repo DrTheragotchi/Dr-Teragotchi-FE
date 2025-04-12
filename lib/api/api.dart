@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "http://10.172.24.125:8000";
+  final String baseUrl = "http://emogotchi.tech";
 
   Future<Map<String, dynamic>> postOnboarding(
       String uuid, String nickname) async {

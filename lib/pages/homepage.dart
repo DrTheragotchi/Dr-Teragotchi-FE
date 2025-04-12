@@ -124,6 +124,41 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    Widget statusButton() {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        height: 40,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 15,
+                backgroundColor: Colors.orangeAccent,
+                child: Image.asset(
+                  'assets/homepage/streak.png',
+                  height: 30,
+                  width: 30,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Text(
+                '1000',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -133,17 +168,90 @@ class _HomePageState extends State<HomePage>
             fit: BoxFit.cover,
           ),
           Positioned(
-            top: 40,
+            top: 60,
             left: 20,
             right: 20,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: 0.7,
-                minHeight: 15,
-                backgroundColor: Colors.white54,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
-              ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 레벨 표시
+                const Text(
+                  'LV: 5',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      SizedBox(
+                        width: 220, // 원하는 가로 길이
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: 0.7,
+                            minHeight: 12,
+                            backgroundColor: Colors.white24,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.orangeAccent),
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 0, bottom: 0),
+                          child: Image.asset(
+                            'assets/homepage/rice.png',
+                            height: 30,
+                            width: 30,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  height: 40,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 15,
+                          backgroundColor: Colors.orangeAccent,
+                          child: Image.asset(
+                            'assets/homepage/streak.png',
+                            height: 30,
+                            width: 30,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          '1000',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(
