@@ -1,6 +1,13 @@
 import 'package:emogotchi/const/theme/theme.dart';
+import 'package:emogotchi/pages/homepage.dart';
 import 'package:emogotchi/pages/initpage.dart';
+import 'package:emogotchi/pages/onboard/nickname.dart';
+import 'package:emogotchi/pages/onboard/onboard.dart';
+import 'package:emogotchi/pages/onboard/pig.dart';
+import 'package:emogotchi/pages/onboard/tiger.dart';
+import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/provider/user_provider.dart';
+import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Ensure 'provider' is added in pubspec.yaml
 
@@ -17,7 +24,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => UserProvider()),
 
-        // ChangeNotifierProvider(create: (context) => ClassGrouping()),
+        ChangeNotifierProvider(create: (context) => DeviceInfoProvider()),
 
         // // ChangeNotifierProvider(
         // //   create: (context) => SemestersProvider(preloadedSemesters),
@@ -44,7 +51,16 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: lightTheme,
-        home: InitPage(),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => InitPage(),
+          '/onboard': (context) => OnboardPage(),
+          '/pigpage': (context) => PigPage(),
+          '/tigerpage': (context) => TigerPage(),
+          '/penguinpage': (context) => PenguinPage(),
+          '/homepage': (context) => HomePage(),
+          '/namepage': (context) => NamePage(),
+        },
       ),
     );
   }

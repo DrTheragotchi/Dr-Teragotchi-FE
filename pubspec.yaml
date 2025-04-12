@@ -18,6 +18,17 @@ dev_dependencies:
   flutter_feather_icons: ^2.0.0
   path_provider: ^2.1.2
   provider:
+  http:
+  shared_preferences: ^2.3.4
+  device_info_plus: ^11.2.0
+  flutter_chat_bubble: ^2.0.2
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/background/
+    - assets/dog/
+    - assets/hamstar/
+    - assets/penguin/
+    - assets/pig/
+    - assets/tiger/
