@@ -1,4 +1,5 @@
 import 'package:emogotchi/api/api.dart';
+import 'package:emogotchi/pages/onboard/emotionpage.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -55,8 +56,16 @@ class _NamePageState extends State<NamePage> {
 
       print("Onboarding Success: $result");
 
-      // TODO: 예를 들어 다음 페이지로 이동하거나 로컬 상태 업데이트
-      // Navigator.pushReplacement(...);
+      await Future.delayed(const Duration(milliseconds: 500));
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 500),
+          pageBuilder: (_, __, ___) => const EmotionPage(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      );
     } catch (e) {
       print("Error sending onboarding data: $e");
 
@@ -135,7 +144,8 @@ class _NamePageState extends State<NamePage> {
               children: [
                 const SizedBox(height: 30),
                 const Text(
-                  "Your Name",
+                  "What's your soul mate name?",
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 20),
@@ -167,7 +177,9 @@ class _NamePageState extends State<NamePage> {
                     borderRadius: BorderRadius.circular(12),
                     color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
                   ),
-                  onSubmitted: (text) => _handleNext(),
+                  onSubmitted: (_) {
+                    FocusScope.of(context).unfocus();
+                  },
                 ),
               ],
             ),

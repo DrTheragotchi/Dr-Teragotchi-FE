@@ -7,6 +7,7 @@ environment:
   sdk: ^3.5.4
 
 dependencies:
+  carousel_slider: ^5.0.0
   flutter:
     sdk: flutter
   intl: ^0.19.0
@@ -33,3 +34,5 @@ flutter:
     - assets/penguin/
     - assets/pig/
     - assets/tiger/
+    - assets/emoji/
+    - assets/doctor.png

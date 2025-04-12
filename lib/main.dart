@@ -1,11 +1,14 @@
 import 'package:emogotchi/const/theme/theme.dart';
 import 'package:emogotchi/pages/homepage.dart';
 import 'package:emogotchi/pages/initpage.dart';
+import 'package:emogotchi/pages/onboard/chatpage.dart';
+import 'package:emogotchi/pages/onboard/emotionpage.dart';
 import 'package:emogotchi/pages/onboard/nickname.dart';
 import 'package:emogotchi/pages/onboard/onboard.dart';
 import 'package:emogotchi/pages/onboard/pig.dart';
 import 'package:emogotchi/pages/onboard/tiger.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
+import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
@@ -23,30 +26,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => UserProvider()),
-
         ChangeNotifierProvider(create: (context) => DeviceInfoProvider()),
-
-        // // ChangeNotifierProvider(
-        // //   create: (context) => SemestersProvider(preloadedSemesters),
-        // // ),
-        // // ChangeNotifierProvider(
-        // //   create: (context) => SavedSemesterProvider(semester),
-        // // ),
-
-        // /* --- 아래는 정상 ---- */
-        // ChangeNotifierProvider(create: (_) => CurrentIndexProvider()),
-        // ChangeNotifierProvider(create: (_) => FriendsProvider()),
-        // /* --- course & personasl info provider ====  */
-        // ChangeNotifierProvider(create: (_) => SemesterProvider()),
-        // ChangeNotifierProvider(create: (context) => CourseColorProvider()),
-
-        // ChangeNotifierProvider(create: (context) => DepartmentProvider()),
-        // ChangeNotifierProvider(create: (context) => InstitutionProvider()),
-        // ChangeNotifierProvider(create: (context) => UserInfoProvider()),
-        // ChangeNotifierProvider(create: (context) => AdminProvider()),
-        // ChangeNotifierProvider(create: (context) => ShowAdProvider()),
-        // ChangeNotifierProvider(create: (context) => AppIconProvider()),
-        // ChangeNotifierProvider(create: (context) => MyCodeProvider()),
+        ChangeNotifierProvider(create: (context) => EmotionProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -60,6 +41,8 @@ class MyApp extends StatelessWidget {
           '/penguinpage': (context) => PenguinPage(),
           '/homepage': (context) => HomePage(),
           '/namepage': (context) => NamePage(),
+          '/chatpage': (context) => ChatPage(),
+          '/emotionpage': (context) => EmotionPage(),
         },
       ),
     );
