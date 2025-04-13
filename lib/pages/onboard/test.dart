@@ -9,7 +9,7 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   Timer? _scrollTimer;
   double _scrollSpeed = 1.5;
@@ -25,7 +25,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
 
-    // 시작 시 살짝 앞으로 이동
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 2);
     });
@@ -55,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final repeatedCharacters = List.generate(
-      50, // 많이 반복해서 무제한처럼 보이게 함
+      50,
       (index) => _characters[index % _characters.length],
     );
 
@@ -65,6 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         bottom: false,
         child: Stack(
           children: [
+            // Background
             Container(
               height: size.height,
               width: size.width,
@@ -75,6 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
+            // Gradient overlay
             Container(
               height: size.height,
               width: size.width,
@@ -89,16 +90,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
+            // Main content
             SingleChildScrollView(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 0.0, vertical: 100),
+                padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 100),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 50),
+                    const SizedBox(height: 20),
                     const Text(
-                      'how we set up for your spirit animal with 5 questions',
+                      'Set up your spirit animal \nwith just a few messages!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 25,
@@ -108,11 +109,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'your spiritual animal is here to help you',
+                      'Your Spiritual Animal is here to help you',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
+                        fontSize: 18,
+                        color: Color.fromRGBO(242, 242, 243, 0.702),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -155,18 +156,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildEmotionBubble(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.black87,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+    late final AnimationController controller;
+    late final Animation<Offset> animation;
+
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    animation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0.05, 0),
+    ).chain(CurveTween(curve: Curves.elasticIn)).animate(controller);
+
+    return GestureDetector(
+      onTap: () async {
+        await controller.forward();
+        await controller.reverse();
+      },
+      child: SlideTransition(
+        position: animation,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );

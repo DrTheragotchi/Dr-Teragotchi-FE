@@ -1,4 +1,6 @@
 import 'package:emogotchi/pages/onboard/test.dart';
+import 'package:emogotchi/pages/onboard/test2.dart';
+import 'package:emogotchi/pages/onboard/test3.dart';
 import 'package:flutter/material.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/pages/onboard/pig.dart';
@@ -17,8 +19,8 @@ class _OnboardPageState extends State<OnboardPage> {
 
   final List<Widget> _pages = [
     OnboardingScreen(),
-    PenguinPage(),
-    PigPage(),
+    OnboardingApp2(),
+    BetterAnimalPage(),
     TigerPage(),
   ];
 
@@ -37,7 +39,6 @@ class _OnboardPageState extends State<OnboardPage> {
       );
     } else {
       Navigator.pushNamed(context, '/namepage');
-
       // TODO: 온보딩 끝났을 때 다음 화면으로 이동
       // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const InitPage()));
     }
