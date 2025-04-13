@@ -1,3 +1,4 @@
+import 'package:emogotchi/pages/onboard/test.dart';
 import 'package:flutter/material.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/pages/onboard/pig.dart';
@@ -15,6 +16,7 @@ class _OnboardPageState extends State<OnboardPage> {
   int _currentPage = 0;
 
   final List<Widget> _pages = [
+    OnboardingScreen(),
     PenguinPage(),
     PigPage(),
     TigerPage(),
@@ -68,7 +70,7 @@ class _OnboardPageState extends State<OnboardPage> {
                   height: 8,
                   decoration: BoxDecoration(
                     color: _currentPage == index
-                        ? Colors.black
+                        ? Colors.white
                         : Colors.grey.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(4),
                   ),
