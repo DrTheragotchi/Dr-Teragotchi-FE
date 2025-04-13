@@ -1,6 +1,7 @@
 import 'package:emogotchi/pages/onboard/test.dart';
 import 'package:emogotchi/pages/onboard/test2.dart';
 import 'package:emogotchi/pages/onboard/test3.dart';
+import 'package:emogotchi/pages/settingpage.dart';
 import 'package:flutter/material.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/pages/onboard/pig.dart';
@@ -18,6 +19,7 @@ class _OnboardPageState extends State<OnboardPage> {
   int _currentPage = 0;
 
   final List<Widget> _pages = [
+    SettingPage(),
     OnboardingScreen(),
     OnboardingApp2(),
     BetterAnimalPage(),
