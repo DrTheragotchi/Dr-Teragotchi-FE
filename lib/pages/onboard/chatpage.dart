@@ -72,6 +72,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _currentEmotion = widget.emotion.toLowerCase();
     _isThinking = true;
+
     _initialize().then((_) {
       if (mounted) {
         setState(() {
@@ -102,6 +103,7 @@ class _ChatPageState extends State<ChatPage> {
     _uuid = deviceInfoProvider.uuid ?? 'error';
     final response = await ApiService().getUser(_uuid);
 
+    // 감정은 widget.emotion을 사용하므로 setUserData에서 emotion 제거
     userProvider.setUserData(
       uuid: response['uuid'] ?? userProvider.uuid,
       animal: response['animal_type']?.toString().isNotEmpty == true
@@ -142,6 +144,8 @@ class _ChatPageState extends State<ChatPage> {
       _uuid,
       widget.emotion.toUpperCase(),
     );
+
+    print('🔍 getUser Response: $response'); // 여기!
 
     setState(() {
       _isThinking = false;

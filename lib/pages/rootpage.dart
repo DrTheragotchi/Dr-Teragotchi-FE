@@ -22,6 +22,7 @@ class _RootPageState extends State<RootPage> {
   Set<DateTime> _dataAvailableDays = {};
   Map<String, Map<String, String>> _emotionAndSummaryByDate = {};
   String _animalType = 'dog';
+  String _nickname = ''; // ✅ 추가
 
   @override
   void initState() {
@@ -59,13 +60,15 @@ class _RootPageState extends State<RootPage> {
         };
       }
 
-      final userInfo = await api.getUser(uuid);
+      final userInfo = await api.getUser(uuid); // ✅ 닉네임도 받아오기
       final type = userInfo['animal_type'] ?? 'dog';
+      final nickname = userInfo['nickname'] ?? '';
 
       setState(() {
         _dataAvailableDays = tempDates;
         _emotionAndSummaryByDate = tempData;
         _animalType = type.toLowerCase();
+        _nickname = nickname; // ✅ 저장
         _isDataReady = true;
       });
     } catch (e) {
@@ -97,7 +100,10 @@ class _RootPageState extends State<RootPage> {
         });
       }
     } else if (_currentIndex == 2) {
-      currentPage = const SettingPage();
+      currentPage = SettingPage(
+        animalType: _animalType,
+        nickname: _nickname,
+      );
     } else {
       currentPage = _isChatMode ? const ChatPage() : const HomePage();
     }
@@ -111,12 +117,12 @@ class _RootPageState extends State<RootPage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: (_currentIndex == 0 || _currentIndex == 2)
-                      ? Colors.white
+                      ? Colors.transparent
                       : Colors.transparent,
                 ),
                 child: BottomNavigationBar(
                   backgroundColor: (_currentIndex == 0 || _currentIndex == 2)
-                      ? Colors.white
+                      ? Colors.transparent
                       : Colors.transparent,
                   elevation: 0,
                   currentIndex: _currentIndex,
@@ -151,7 +157,7 @@ class _RootPageState extends State<RootPage> {
                         height: 60,
                         decoration: BoxDecoration(
                           color: (_currentIndex == 0 || _currentIndex == 2)
-                              ? Colors.white
+                              ? Colors.white.withOpacity(0.3)
                               : Colors.white.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
@@ -176,7 +182,7 @@ class _RootPageState extends State<RootPage> {
                                 ? Icons.home
                                 : Icons.add,
                             color: (_currentIndex == 0 || _currentIndex == 2)
-                                ? Colors.grey
+                                ? Colors.white
                                 : Colors.white,
                             size: 30,
                           ),

@@ -185,23 +185,30 @@ class CalendarPage extends StatelessWidget {
                                                         'emotion': emotion,
                                                       };
                                                     });
-
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content: Text(
-                                                              "일기가 성공적으로 생성되었습니다.")),
-                                                    );
                                                   } catch (e) {
                                                     print(
                                                         "Diary generation error: $e");
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content: Text(
-                                                              "일기 생성에 실패했습니다.")),
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return AlertDialog(
+                                                          title: const Text(
+                                                              "Error"),
+                                                          content: const Text(
+                                                              "Failed to generate the journal."),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              },
+                                                              child: const Text(
+                                                                  "OK"),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
                                                     );
                                                   }
                                                 },

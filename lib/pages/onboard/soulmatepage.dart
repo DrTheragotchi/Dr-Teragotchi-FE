@@ -56,9 +56,9 @@ class _SoulmatePageState extends State<SoulmatePage> {
     String imagePath;
     if (emotion == 'neutral') {
       final eyeState = _isEyeOpen ? 'eye_open' : 'eye_close';
-      imagePath = 'assets/$animalType/${animalType}_$eyeState.png';
+      imagePath = 'assets/${animalType}_egg/${animalType}_egg_$eyeState.png';
     } else {
-      imagePath = 'assets/$animalType/${animalType}_${emotion}.png';
+      imagePath = 'assets/${animalType}_egg/${animalType}_egg_${emotion}.png';
     }
 
     return SizedBox(

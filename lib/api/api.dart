@@ -1,8 +1,9 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://b7cd-64-92-84-106.ngrok-free.app";
+  final String baseUrl = "https://3eb4-64-92-84-106.ngrok-free.app";
 
   Future<Map<String, dynamic>> postOnboarding(
       String uuid, String nickname) async {
@@ -149,13 +150,13 @@ class ApiService {
   }
 
   Future<void> updateUserPoints(String uuid, int points) async {
-    final url =
-        Uri.parse('$baseUrl/user/update/points?uuid=$uuid&points=$points');
+    final url = Uri.parse('$baseUrl/user/update/points');
 
     try {
-      final response = await http.get(
+      final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'uuid': uuid, 'points': points}),
       );
 
       if (response.statusCode == 200) {
@@ -168,6 +169,52 @@ class ApiService {
     } catch (e) {
       print("Error occurred: $e");
       throw Exception('Error updating user points: $e');
+    }
+  }
+
+  Future<void> updateUserLevel(String uuid, int animalLevel) async {
+    final url = Uri.parse('$baseUrl/user/update/level/');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'uuid': uuid, 'animal_level': animalLevel}),
+      );
+
+      if (response.statusCode == 200) {
+        log("✅ User level updated successfully");
+      } else {
+        throw Exception(
+          'Failed to update user level (status ${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      log("Error occurred: $e");
+      throw Exception('Error updating user level: $e');
+    }
+  }
+
+  Future<void> updateUserName(String uuid, String newNickname) async {
+    final url = Uri.parse('$baseUrl/user/update/name/');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'uuid': uuid, 'nickname': newNickname}),
+      );
+
+      if (response.statusCode == 200) {
+        log("✅ User name updated successfully");
+      } else {
+        throw Exception(
+          'Failed to update user name (status ${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      log("Error occurred: $e");
+      throw Exception('Error updating user name: $e');
     }
   }
 }

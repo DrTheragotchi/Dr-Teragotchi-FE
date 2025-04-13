@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:confetti/confetti.dart';
 import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/components/home_chat.dart';
 import 'package:emogotchi/pages/onboard/chatpage.dart';
@@ -18,12 +19,17 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _moveAnimation;
   late Animation<double> _tiltAnimation;
   late String selectedMessage;
+  late AnimationController _plusOneController;
+  late AnimationController _levelUpController;
+  late Animation<double> _levelUpFade;
+  bool showMinusTwenty = false;
+  late AnimationController _minusTwentyController;
+  late Animation<double> _minusTwentyFade;
 
   /* ------------------------------ */
   late String animalType;
@@ -35,8 +41,27 @@ class _HomePageState extends State<HomePage>
   String uuid = '';
   bool _isEyeOpen = true;
   Timer? _blinkTimer;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+  bool _isReady = false;
+
+  /* ------------------------------ */
+  bool showPlusOne = false;
+  bool showLevelUp = false;
+
+  bool showFallingRice = false;
+  double riceProgress = 0.0;
 
   bool _firstJumpDone = false;
+
+  /* ------------------------------ */
+  late AnimationController _evolutionJumpController;
+  late AnimationController _rotationController;
+  late Animation<double> _rotationAnimation;
+  late ConfettiController _leftConfettiController;
+  late ConfettiController _rightConfettiController;
+  late ConfettiController _bottomfettiController;
+  bool _showEvolvedAnimal = false;
 
   final List<String> background = [
     'assets/background/airport.png',
@@ -75,6 +100,58 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
+    _plusOneController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _levelUpController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _levelUpFade = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+      parent: _levelUpController,
+      curve: Curves.easeOut,
+    ));
+
+    _minusTwentyController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _minusTwentyFade =
+        Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+      parent: _minusTwentyController,
+      curve: Curves.easeOut,
+    ));
+
+    _evolutionJumpController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _rotationAnimation = Tween<double>(begin: 0, end: 4 * pi).animate(
+      CurvedAnimation(parent: _rotationController, curve: Curves.easeOutQuart),
+    );
+    _leftConfettiController =
+        ConfettiController(duration: const Duration(seconds: 4));
+    _rightConfettiController =
+        ConfettiController(duration: const Duration(seconds: 4));
+    _bottomfettiController =
+        ConfettiController(duration: const Duration(seconds: 4));
+
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
+    );
+
     _setupAnimation();
     _setup();
   }
@@ -82,7 +159,10 @@ class _HomePageState extends State<HomePage>
   Future<void> _setup() async {
     final prefs = await SharedPreferences.getInstance();
     uuid = prefs.getString('uuid') ?? '';
-
+    riceLevel = prefs.getInt('riceLevel') ?? 0;
+    riceProgress =
+        prefs.getDouble('riceProgress') ?? (riceLevel / 10); // 👈 fallback
+    _showEvolvedAnimal = prefs.getBool('evolved_$uuid') ?? false; // ✅ 추가
     print('📦 로컬에서 불러온 uuid: $uuid');
 
     if (uuid.isNotEmpty) {
@@ -105,7 +185,9 @@ class _HomePageState extends State<HomePage>
         animalType = response['animal_type'] ?? 'penguin';
         points = response['points'] ?? 0;
         level = int.tryParse(response['animal_level']?.toString() ?? '') ?? 1;
+        _isReady = true; // ✅ 준비 완료 표시
       });
+      _fadeController.forward(); // ✅ fade 시작
     }
   }
 
@@ -131,6 +213,96 @@ class _HomePageState extends State<HomePage>
     _tiltAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+  }
+
+  void _triggerRiceEffect() async {
+    setState(() {
+      riceLevel++;
+      riceProgress = riceLevel / 10;
+      showPlusOne = true;
+      showFallingRice = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('riceLevel', riceLevel); // ✅ riceLevel 저장
+    await prefs.setDouble('riceProgress', riceProgress); // ✅ riceProgress 저장
+
+    // +1 애니메이션
+    _plusOneController.forward(from: 0);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => showPlusOne = false);
+    });
+    Future.delayed(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => showFallingRice = false);
+    });
+
+    // 🎯 만약 10 이상 되면 초기화 + 레벨업
+    if (riceLevel >= 10 || riceProgress >= 1.0) {
+      setState(() {
+        riceLevel = 0;
+        riceProgress = 0.0;
+        level += 1;
+        showLevelUp = true;
+      });
+
+      await prefs.setInt('riceLevel', 0);
+      await prefs.setDouble('riceProgress', 0.0);
+
+      try {
+        await ApiService().updateUserLevel(uuid.trim(), level);
+        print("🎉 서버에 레벨 업데이트 완료: $level");
+      } catch (e) {
+        print("❌ 서버 레벨 업데이트 실패: $e");
+      }
+      _levelUpController.forward(from: 0); // ⭐️ 애니메이션 시작
+
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) setState(() => showLevelUp = false);
+      });
+    }
+
+    // 수정
+    if (level == 5 && !_showEvolvedAnimal) {
+      final prefs = await SharedPreferences.getInstance();
+      final hasEvolved = prefs.getBool('evolved_$uuid') ?? false;
+
+      if (!hasEvolved) {
+        _playEvolutionAnimation();
+      }
+    }
+
+    print("🍚 riceLevel: $riceLevel");
+    print("📊 riceProgress: $riceProgress");
+    print("⬆️ level: $level");
+  }
+
+  void _playEvolutionAnimation() async {
+    // 🥚 알 점프 2번
+    for (int i = 0; i < 2; i++) {
+      await _evolutionJumpController.forward();
+      await _evolutionJumpController.reverse();
+    }
+
+    // ✅ 여기서 1초 대기 → 이미지 변경 (이전에는 순서가 애매했음)
+    await Future.delayed(const Duration(milliseconds: 1000));
+    setState(() {
+      _showEvolvedAnimal = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('evolved_$uuid', true); // ✅ 저장
+    // 🎉 confetti & 회전
+    _leftConfettiController.play();
+    _rightConfettiController.play();
+    _bottomfettiController.play();
+
+    await _rotationController.forward(from: 0);
+    await _rotationController.reverse();
+
+    // 🐣 캐릭터 점프 2번
+    for (int i = 0; i < 2; i++) {
+      await _evolutionJumpController.forward();
+      await _evolutionJumpController.reverse();
+    }
   }
 
   @override
@@ -203,35 +375,115 @@ class _HomePageState extends State<HomePage>
   Widget _animalImage({bool animated = true}) {
     String imagePath;
 
-    if (animalMood == 'neutral') {
+    // ✅ 진화 여부 정확하게 판단
+    bool isEvolved = level >= 5 || _showEvolvedAnimal;
+
+    if (!isEvolved) {
+      imagePath =
+          'assets/${animalType}_egg/${animalType}_egg_${animalMood}.png';
+    } else if (animalMood == 'neutral') {
       final eyeState = _isEyeOpen ? 'eye_open' : 'eye_close';
       imagePath = 'assets/$animalType/${animalType}_$eyeState.png';
     } else {
       imagePath = 'assets/$animalType/${animalType}_${animalMood}.png';
     }
 
-    final image = Image.asset(
-      imagePath,
-      fit: BoxFit.contain,
-    );
+    final image = Image.asset(imagePath, fit: BoxFit.contain);
 
     return SizedBox(
       height: 180,
-      child: animated
-          ? AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (!isEvolved)
+            // 알 상태 → 점프 애니메이션만
+            AnimatedBuilder(
+              animation: _evolutionJumpController,
+              builder: (context, _) {
+                double jumpOffset = -20 * _evolutionJumpController.value;
                 return Transform.translate(
-                  offset: Offset(0, -_moveAnimation.value),
-                  child: Transform.rotate(
-                    angle: _firstJumpDone ? _tiltAnimation.value : 0,
-                    child: child,
-                  ),
+                  offset: Offset(0, jumpOffset),
+                  child: image,
                 );
               },
-              child: image,
             )
-          : image,
+          else
+            // 진화 상태 → 회전만
+            AnimatedBuilder(
+              animation: _rotationController,
+              builder: (context, _) {
+                double rotationAngle = _rotationAnimation.value;
+                return Transform.rotate(
+                  angle: rotationAngle,
+                  child: image,
+                );
+              },
+            ),
+
+          // 🎉 Confetti
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ConfettiWidget(
+              confettiController: _bottomfettiController,
+              blastDirection: pi / 2,
+              emissionFrequency: 0.6,
+              numberOfParticles: 8,
+              blastDirectionality: BlastDirectionality.explosive,
+              maxBlastForce: 20,
+              minBlastForce: 10,
+              gravity: 0.3,
+              colors: const [Colors.orange, Colors.pink, Colors.yellow],
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: ConfettiWidget(
+              confettiController: _leftConfettiController,
+              blastDirection: -pi / 2,
+              emissionFrequency: 0.6,
+              numberOfParticles: 8,
+              blastDirectionality: BlastDirectionality.explosive,
+              maxBlastForce: 20,
+              minBlastForce: 10,
+              gravity: 0.3,
+              colors: const [Colors.orange, Colors.pink, Colors.yellow],
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: ConfettiWidget(
+              confettiController: _rightConfettiController,
+              blastDirection: -pi / 2,
+              emissionFrequency: 0.6,
+              numberOfParticles: 8,
+              blastDirectionality: BlastDirectionality.explosive,
+              maxBlastForce: 20,
+              minBlastForce: 10,
+              gravity: 0.3,
+              colors: const [Colors.orange, Colors.pink, Colors.yellow],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _animatedCharacterWrapper(Widget child) {
+    return AnimatedBuilder(
+      animation:
+          Listenable.merge([_evolutionJumpController, _rotationController]),
+      builder: (context, _) {
+        double jumpOffset = -20 * _evolutionJumpController.value;
+        double rotationAngle = _rotationAnimation.value;
+
+        return Transform.translate(
+          offset: Offset(0, jumpOffset),
+          child: Transform.rotate(
+            angle: rotationAngle,
+            child: child,
+          ),
+        );
+      },
     );
   }
 
@@ -247,8 +499,19 @@ class _HomePageState extends State<HomePage>
 
   @override
   void dispose() {
-    _blinkTimer?.cancel();
+    // 애니메이션 중지 후 dispose
+    _controller.stop();
     _controller.dispose();
+    _plusOneController.dispose();
+    _levelUpController.dispose();
+    _minusTwentyController.dispose();
+    _evolutionJumpController.dispose();
+    _rotationController.dispose();
+    _leftConfettiController.dispose();
+    _rightConfettiController.dispose();
+    _bottomfettiController.dispose();
+    _blinkTimer?.cancel();
+    _fadeController.dispose(); // 👈 이것도 잊지 말기
     super.dispose();
   }
 
@@ -274,55 +537,128 @@ class _HomePageState extends State<HomePage>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  height: 45,
-                  width: 220,
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Center(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        SizedBox(
-                          width: 200,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: riceLevel / 5,
-                              minHeight: 15,
-                              backgroundColor: Colors.grey.withOpacity(0.3),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.orangeAccent),
+                Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      height: 45,
+                      width: 220,
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Center(
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            SizedBox(
+                              width: 200,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: riceProgress,
+                                  minHeight: 15,
+                                  backgroundColor: Colors.grey.withOpacity(0.3),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.orangeAccent),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        Positioned(
-                          left: -8,
-                          top: -8,
-                          child: CircleAvatar(
-                            radius: 15,
-                            backgroundColor:
-                                Colors.yellowAccent.withOpacity(0.7),
-                            child: Image.asset(
-                              'assets/homepage/rice.png',
-                              height: 30,
-                              width: 30,
+                            if (showPlusOne)
+                              Positioned(
+                                right: -50,
+                                top: 5,
+                                child: AnimatedBuilder(
+                                  animation: _plusOneController,
+                                  builder: (context, child) {
+                                    return FadeTransition(
+                                      opacity:
+                                          Tween<double>(begin: 1.0, end: 0.0)
+                                              .animate(_plusOneController),
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin:
+                                              const Offset(0, 0.5), // 아래에서 시작
+                                          end: const Offset(0, -1), // 위로 올라감
+                                        ).animate(CurvedAnimation(
+                                          parent: _plusOneController,
+                                          curve: Curves.easeOut,
+                                        )),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    "+1",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orangeAccent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Positioned(
+                              left: -8,
+                              top: -8,
+                              child: CircleAvatar(
+                                radius: 15,
+                                backgroundColor:
+                                    Colors.yellowAccent.withOpacity(0.7),
+                                child: Image.asset('assets/homepage/rice.png',
+                                    height: 30, width: 30),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 6),
-                StatusButton(false, points),
+                Row(
+                  children: [
+                    StatusButton(false, level, false),
+                    if (showLevelUp)
+                      FadeTransition(
+                        opacity: _levelUpFade,
+                        child: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text(
+                            "+1",
+                            style: TextStyle(
+                              color: Colors.orangeAccent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 6),
-                StatusButton(true, level),
+                Row(
+                  children: [
+                    StatusButton(true, points, true),
+                    if (showMinusTwenty)
+                      FadeTransition(
+                        opacity: _minusTwentyFade,
+                        child: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text(
+                            "-20",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 6),
-                StatusButton(true, streak),
+                StatusButton(true, streak, false),
               ],
             ),
           ),
@@ -331,80 +667,77 @@ class _HomePageState extends State<HomePage>
             left: 0,
             right: 0,
             child: points >= 20
-                ? Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                ? (_isReady)
+                    ? FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: () async {
+                              HapticFeedback.mediumImpact();
+                              if (points >= 20 && riceLevel < 10) {
+                                setState(() {
+                                  points -= 20;
+                                  showMinusTwenty = true;
+                                });
+                                _minusTwentyController.forward(from: 0);
+                                Future.delayed(
+                                    const Duration(milliseconds: 800), () {
+                                  if (mounted)
+                                    setState(() => showMinusTwenty = false);
+                                });
+                                _triggerRiceEffect(); // 여기서 이펙트 실행
+                                try {
+                                  await ApiService()
+                                      .updateUserPoints(uuid.trim(), points);
+                                } catch (e) {
+                                  print("❌ 포인트 업데이트 실패: $e");
+                                }
+                              }
+                            },
+                            child: Image.asset(
+                              'assets/homepage/rice.png',
+                              height: 110,
+                              width: 100,
+                            ),
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                      ),
-                      onPressed: () async {
-                        if (points >= 20 && riceLevel < 10) {
-                          setState(() {
-                            points -= 20;
-                            riceLevel += 1;
-                          });
-
-                          try {
-                            await ApiService().updateUserPoints(uuid, points);
-                            print("🎯 서버에 포인트 반영 완료: $points");
-                          } catch (e) {
-                            print("❌ 포인트 업데이트 실패: $e");
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("서버에 포인트 업데이트 중 문제가 발생했어요."),
+                      )
+                    : const SizedBox.shrink()
+                : (_isReady)
+                    ? FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            startAnimalAnimation();
+                            Navigator.of(context).push(
+                              PageRouteBuilder(
+                                settings: RouteSettings(
+                                  name: '/chatpage',
+                                  arguments: {
+                                    'emotion': '',
+                                  },
+                                ),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        ChatPage(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  return FadeTransition(
+                                      opacity: animation, child: child);
+                                },
+                                transitionDuration:
+                                    const Duration(milliseconds: 500),
                               ),
                             );
-                          }
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text("🍚 밥 레벨이 올라갔어요! 현재 레벨: $riceLevel"),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        "🍚 Feed (-20 Coins)",
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white),
-                      ),
-                    ),
-                  )
-                : GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      startAnimalAnimation();
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          settings: RouteSettings(
-                            name: '/chatpage',
-                            arguments: {
-                              'emotion': '',
-                            },
-                          ),
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  ChatPage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return FadeTransition(
-                                opacity: animation, child: child);
                           },
-                          transitionDuration: const Duration(milliseconds: 500),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: HomeChatBubble(text: selectedMessage),
+                          ),
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: HomeChatBubble(text: selectedMessage),
-                    ),
-                  ),
+                      )
+                    : const SizedBox.shrink(),
           ),
           Positioned(
             bottom: 105,
@@ -414,7 +747,12 @@ class _HomePageState extends State<HomePage>
               child: Hero(
                 tag: 'penguinHero',
                 flightShuttleBuilder: _flightShuttleBuilder,
-                child: _animalImage(),
+                child: _isReady
+                    ? FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: _animalImage(),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ),
           ),
@@ -423,7 +761,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget StatusButton(bool isStreak, int value) {
+  Widget StatusButton(bool isStreak, int value, bool isCoin) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.7),
@@ -440,19 +778,25 @@ class _HomePageState extends State<HomePage>
             backgroundColor: isStreak
                 ? Colors.orangeAccent.withOpacity(0.7)
                 : Colors.blue.withOpacity(0.7),
-            child: isStreak
+            child: isCoin
                 ? Image.asset(
-                    'assets/homepage/streak.png',
+                    'assets/emoji/coin.png',
                     height: 30,
                     width: 30,
                   )
-                : const Text(
-                    'LV',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black,
-                    ),
-                  ),
+                : isStreak
+                    ? Image.asset(
+                        'assets/homepage/streak.png',
+                        height: 30,
+                        width: 30,
+                      )
+                    : const Text(
+                        'LV',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                      ),
           ),
           const SizedBox(width: 4),
           Text(

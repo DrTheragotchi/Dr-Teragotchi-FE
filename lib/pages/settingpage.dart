@@ -1,10 +1,26 @@
+import 'dart:ui';
+
+import 'package:emogotchi/provider/background_provider.dart';
 import 'package:flutter/material.dart';
 import 'main/notificationSettingPage.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
-class SettingPage extends StatelessWidget {
-  const SettingPage({Key? key}) : super(key: key);
+class SettingPage extends StatefulWidget {
+  final String? nickname;
+  final String? animalType;
 
+  const SettingPage({
+    Key? key,
+    this.nickname,
+    this.animalType,
+  }) : super(key: key);
+
+  @override
+  _SettingPageState createState() => _SettingPageState();
+}
+
+class _SettingPageState extends State<SettingPage> {
   // Helper function for action buttons with optional custom colors
   Widget _buildActionButton(
     BuildContext context,
@@ -102,123 +118,135 @@ class SettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedBackground =
+        Provider.of<BackgroundProvider>(context).selectedBackground ??
+            'assets/background/airport.png';
+
     return Scaffold(
       backgroundColor: Colors.white, // White background
-      body: SafeArea(
-        // Keeps content below the status bar
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Spacing from the top
-              const SizedBox(height: 50),
-
-              // --- Profile Avatar Section ---
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: const CircleAvatar(
-                  radius: 55,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.pets,
-                    size: 60,
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'nickname',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Level',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[500],
-                ),
-              ),
-
-              // Spacing before buttons
-              const SizedBox(height: 30),
-
-              // --- Action Buttons ---
-              _buildActionButton(context, 'Change nickname', () {
-                // Handle Change nickname action
-              }),
-              const SizedBox(height: 16),
-              _buildActionButton(context, 'Notification', () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const NotificationSettingsPage()),
-                );
-              }),
-              const SizedBox(height: 16),
-              _buildActionButton(context, 'Support', () {
-                // Handle Support action
-              }),
-              const SizedBox(height: 16),
-              _buildActionButton(
-                context,
-                'Delete Account',
-                () {
-                  // Show the confirmation popup when Delete Account is pressed
-                  _showDeleteAccountConfirmation(context);
-                },
-                backgroundColor: Colors.red,
-                textColor: Colors.white,
-              ),
-
-              // Spacer pushes the footer links to the bottom
-              const Spacer(),
-
-              // --- Footer Links ---
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildFooterLink('Terms of Service', () {
-                      // Handle Terms
-                    }),
-                    Text(
-                      '|',
-                      style: TextStyle(color: Colors.grey[400]),
-                    ),
-                    _buildFooterLink('Privacy Policy', () {
-                      // Handle Privacy
-                    }),
-                    Text(
-                      '|',
-                      style: TextStyle(color: Colors.grey[400]),
-                    ),
-                    _buildFooterLink('Bug Report', () {
-                      // Handle Bug Report
-                    }),
-                    Text(
-                      '|',
-                      style: TextStyle(color: Colors.grey[400]),
-                    ),
-                    _buildFooterLink('FeedBack', () {
-                      // Handle Feedback
-                    }),
-                  ],
-                ),
-              ),
-            ],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            selectedBackground,
+            fit: BoxFit.cover,
           ),
-        ),
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // 흐림 정도 조절
+            child: Container(
+              color: Colors.black.withOpacity(0.05), // 약간 어둡게 (선택 사항)
+            ),
+          ),
+          SafeArea(
+            // Keeps content below the status bar
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Spacing from the top
+                  const SizedBox(height: 50),
+
+                  // --- Profile Avatar Section ---
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: const CircleAvatar(
+                      radius: 55,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.pets,
+                        size: 60,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    widget.nickname ?? '  ',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  // Spacing before buttons
+                  const SizedBox(height: 30),
+
+                  // --- Action Buttons ---
+                  _buildActionButton(context, 'Change nickname', () {
+                    // Handle Change nickname action
+                  }),
+                  const SizedBox(height: 16),
+                  _buildActionButton(context, 'Notification', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const NotificationSettingsPage()),
+                    );
+                  }),
+                  const SizedBox(height: 16),
+                  _buildActionButton(context, 'Support', () {
+                    // Handle Support action
+                  }),
+                  const SizedBox(height: 16),
+                  _buildActionButton(
+                    context,
+                    'Delete Account',
+                    () {
+                      // Show the confirmation popup when Delete Account is pressed
+                      _showDeleteAccountConfirmation(context);
+                    },
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                  ),
+
+                  // Spacer pushes the footer links to the bottom
+                  const Spacer(),
+
+                  // --- Footer Links ---
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildFooterLink('Terms of Service', () {
+                          // Handle Terms
+                        }),
+                        Text(
+                          '|',
+                          style: TextStyle(color: Colors.grey[400]),
+                        ),
+                        _buildFooterLink('Privacy Policy', () {
+                          // Handle Privacy
+                        }),
+                        Text(
+                          '|',
+                          style: TextStyle(color: Colors.grey[400]),
+                        ),
+                        _buildFooterLink('Bug Report', () {
+                          // Handle Bug Report
+                        }),
+                        Text(
+                          '|',
+                          style: TextStyle(color: Colors.grey[400]),
+                        ),
+                        _buildFooterLink('FeedBack', () {
+                          // Handle Feedback
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
