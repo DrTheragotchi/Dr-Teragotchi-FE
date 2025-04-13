@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart'; // Import Cupertino widgets
-import 'package:intl/intl.dart'; // Import intl package for date formatting
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tz;
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({Key? key}) : super(key: key);
@@ -12,95 +14,93 @@ class NotificationSettingsPage extends StatefulWidget {
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   bool _allNotificationsEnabled = true;
-  // Removed unused _like/_comment notification toggles from state for simplicity
-  // bool _likeNotificationsEnabled = true;
-  // bool _commentNotificationsEnabled = false;
-  bool _soundNotificationsEnabled = false; // Keep sound toggle state
-
+  bool _soundNotificationsEnabled = false;
   TimeOfDay? _selectedStartTime;
-  TimeOfDay? _selectedEndTime;
 
-  // --- Helper Widgets (Unchanged) ---
-  Widget _buildCupertinoSwitchTile({
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return ListTile(
-      title: Text(title,
-          style: const TextStyle(color: Colors.black, fontSize: 16)),
-      trailing: CupertinoSwitch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: CupertinoColors.activeGreen,
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    tz.initializeTimeZones();
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings();
+    const settings = InitializationSettings(android: androidInit, iOS: iosInit);
+
+    await flutterLocalNotificationsPlugin.initialize(settings);
+  }
+
+  Future<void> _scheduleDailyNotification(TimeOfDay time) async {
+    final now = DateTime.now();
+    final tz.TZDateTime scheduled = tz.TZDateTime.local(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+
+    final tz.TZDateTime nextInstance = scheduled.isBefore(tz.TZDateTime.now(tz.local))
+        ? scheduled.add(const Duration(days: 1))
+        : scheduled;
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      0,
+      'Good Morning!',
+      'Start your day with Emogotchi 🐧',
+      nextInstance,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'emogotchi_channel',
+          'Daily Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
       ),
-      onTap: () {
-        onChanged(!value);
-      },
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
-  Widget _buildNavigationTile({
-    required String title,
-    String? currentValue,
-    required VoidCallback onTap,
+  void _showCupertinoTimePicker({
+    required BuildContext context,
+    required TimeOfDay? initialTime,
+    required ValueChanged<TimeOfDay> onTimeChanged,
   }) {
-    return ListTile(
-      title: Text(title,
-          style: const TextStyle(color: Colors.black, fontSize: 16)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (currentValue != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Text(
-                currentValue,
-                style: TextStyle(color: Colors.grey[500], fontSize: 15),
-              ),
-            ),
-          Icon(Icons.chevron_right, color: Colors.grey[400], size: 22),
-        ],
-      ),
-      onTap: onTap,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-    );
-  }
-
-  void _showCupertinoTimePicker(
-      {required BuildContext context,
-      required TimeOfDay? initialTime,
-      required ValueChanged<TimeOfDay> onTimeChanged}) {
-    // ... (Time picker code is unchanged)
     final TimeOfDay initialPickerTime = initialTime ?? TimeOfDay.now();
     final DateTime now = DateTime.now();
-    DateTime initialDateTime = DateTime(now.year, now.month, now.day,
-        initialPickerTime.hour, initialPickerTime.minute);
+    DateTime initialDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      initialPickerTime.hour,
+      initialPickerTime.minute,
+    );
     TimeOfDay selectedTime = initialPickerTime;
 
     showCupertinoModalPopup<void>(
       context: context,
       builder: (BuildContext context) => Container(
         height: 250,
-        padding: const EdgeInsets.only(top: 6.0),
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
         color: CupertinoColors.systemBackground.resolveFrom(context),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Align(
               alignment: Alignment.centerRight,
               child: CupertinoButton(
-                child: const Text('Done',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('Done'),
                 onPressed: () {
                   Navigator.pop(context);
                   onTimeChanged(selectedTime);
+                  _scheduleDailyNotification(selectedTime);
                 },
               ),
             ),
@@ -120,202 +120,125 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
     );
   }
 
-  Widget _buildThickDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
-      child: Divider(
-        height: 1,
-        thickness: 1,
-        color: Colors.grey[400],
+  Widget _buildCupertinoSwitchTile({
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return ListTile(
+      title: Text(title),
+      trailing: CupertinoSwitch(
+        value: value,
+        onChanged: onChanged,
+        activeColor: CupertinoColors.activeGreen,
       ),
     );
   }
-  // --- End Helper Widgets ---
 
-  // --- Function to show Confirmation Dialog ---
+  Widget _buildNavigationTile({
+    required String title,
+    String? currentValue,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      title: Text(title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (currentValue != null)
+            Text(currentValue, style: const TextStyle(color: Colors.grey)),
+          const Icon(Icons.chevron_right, color: Colors.grey),
+        ],
+      ),
+      onTap: onTap,
+    );
+  }
+
   void _showTurnOffConfirmationDialog() {
     showCupertinoDialog<void>(
       context: context,
       builder: (BuildContext context) => CupertinoAlertDialog(
         title: const Text('Turn Off Notifications?'),
         content: Column(
-            mainAxisSize: MainAxisSize.min, // Minimizes extra space
-            children: [
-              // Display an asset image (update the asset path as needed)
-              Image.asset(
-                'assets/penguin/penguin_sad.png', // Replace with your image path
-                height: 100, // Adjust the height as needed
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'NO more Connection with Emogotchi?',
-                style: TextStyle(color: Colors.black),
-              ),
-            ]),
-        actions: <CupertinoDialogAction>[
+          children: [
+            Image.asset('assets/penguin/penguin_sad.png', height: 100),
+            const Text('No more connection with Emogotchi?'),
+          ],
+        ),
+        actions: [
           CupertinoDialogAction(
-            // Default action (usually Cancel)
-            isDefaultAction: true,
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.black),
-            ),
-
-            onPressed: () {
-              Navigator.pop(context); // Close the dialog, state remains ON
-            },
+             child: const Text(
+            'Cancel',
+            style: TextStyle(color: Colors.black), // ✅ Make Cancel text black
+          ),
+            onPressed: () => Navigator.pop(context),
           ),
           CupertinoDialogAction(
-            // Destructive action (usually confirmation for negative action)
             isDestructiveAction: true,
             child: const Text('Turn Off'),
             onPressed: () {
-              Navigator.pop(context); // Close the dialog
-              // CONFIRMED: Update the state to OFF
-              setState(() {
-                _allNotificationsEnabled = false;
-                // Optionally, also turn off related settings if needed
-                // _soundNotificationsEnabled = false;
-              });
+              Navigator.pop(context);
+              setState(() => _allNotificationsEnabled = false);
             },
           ),
         ],
       ),
     );
   }
-  // --- End Confirmation Dialog ---
 
   @override
   Widget build(BuildContext context) {
-    const Color lightBackgroundColor = Colors.white;
-    const Color appBarBackgroundColor = Colors.white;
-    const Color appBarForegroundColor = Colors.black;
-
     final String formattedStartTime = _selectedStartTime != null
-        ? MaterialLocalizations.of(context)
-            .formatTimeOfDay(_selectedStartTime!, alwaysUse24HourFormat: false)
+        ? MaterialLocalizations.of(context).formatTimeOfDay(_selectedStartTime!)
         : 'Not Set';
-    final String formattedEndTime = _selectedEndTime != null
-        ? MaterialLocalizations.of(context).formatTimeOfDay(_selectedEndTime!)
-        : 'Not Set';
-    final String durationValue =
-        (_selectedStartTime != null && _selectedEndTime != null)
-            ? '$formattedStartTime - $formattedEndTime'
-            : 'Set Duration';
 
     return Scaffold(
-      backgroundColor: lightBackgroundColor,
       appBar: AppBar(
-        // ... (AppBar setup remains the same)
-        backgroundColor: appBarBackgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: appBarForegroundColor, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        title: const Text('Notifications'),
         centerTitle: true,
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-              color: appBarForegroundColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 18),
-        ),
       ),
       body: ListView(
         children: [
-          const SizedBox(height: 10),
-
-          // --- Notification Toggles Group ---
           _buildCupertinoSwitchTile(
             title: 'All Notifications',
             value: _allNotificationsEnabled,
-            onChanged: (bool newValue) {
-              // Check if the user is trying to turn OFF
-              if (newValue == false) {
-                // Show confirmation dialog before turning OFF
+            onChanged: (value) {
+              if (!value) {
                 _showTurnOffConfirmationDialog();
               } else {
-                // Turning ON: Set state directly
-                setState(() {
-                  _allNotificationsEnabled = true;
-                });
+                setState(() => _allNotificationsEnabled = true);
               }
             },
           ),
-
-          _buildThickDivider(),
-
-          // --- Time Settings Group ---
-          // Wrap time/sound settings in Opacity based on _allNotificationsEnabled
+          const Divider(),
           Opacity(
-            opacity: _allNotificationsEnabled
-                ? 1.0
-                : 0.5, // Dim if all notifications are off
+            opacity: _allNotificationsEnabled ? 1 : 0.5,
             child: IgnorePointer(
-              // Prevent interaction if dimmed
               ignoring: !_allNotificationsEnabled,
               child: Column(
-                // Wrap the related settings in a Column
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildNavigationTile(
                     title: 'Start your Day with Emogotchi',
                     currentValue: formattedStartTime,
-                    onTap: _allNotificationsEnabled
-                        ? () {
-                            // Only allow tap if enabled
-                            _showCupertinoTimePicker(
-                                context: context,
-                                initialTime: _selectedStartTime,
-                                onTimeChanged: (newTime) {
-                                  setState(() {
-                                    _selectedStartTime = newTime;
-                                  });
-                                });
-                          }
-                        : () {}, // Provide an empty function if all notifications are off
+                    onTap: () => _showCupertinoTimePicker(
+                      context: context,
+                      initialTime: _selectedStartTime,
+                      onTimeChanged: (newTime) {
+                        setState(() => _selectedStartTime = newTime);
+                      },
+                    ),
                   ),
-                  _buildNavigationTile(
-                    title: 'Duration',
-                    currentValue: durationValue,
-                    onTap: _allNotificationsEnabled
-                        ? () {
-                            // Only allow tap if enabled
-                            _showCupertinoTimePicker(
-                                context: context,
-                                initialTime: _selectedEndTime,
-                                onTimeChanged: (newTime) {
-                                  setState(() {
-                                    _selectedEndTime = newTime;
-                                  });
-                                });
-                          }
-                        : () {}, // Provide an empty function if all notifications are off
-                  ),
-
-                  _buildThickDivider(), // Divider before sound
-
-                  // --- Sound Setting Group ---
+                  const Divider(),
                   _buildCupertinoSwitchTile(
                     title: 'Notification Sound',
                     value: _soundNotificationsEnabled,
-                    onChanged: (bool value) {
-                      // Always provide a function
-                      if (_allNotificationsEnabled) {
-                        setState(() {
-                          _soundNotificationsEnabled = value;
-                        });
-                      }
-                    },
+                    onChanged: (value) =>
+                        setState(() => _soundNotificationsEnabled = value),
                   ),
                 ],
               ),
             ),
           ),
-
-          const SizedBox(height: 30),
         ],
       ),
     );
