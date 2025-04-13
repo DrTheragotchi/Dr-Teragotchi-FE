@@ -43,6 +43,11 @@
 	<string>Main</string>
 	<key>UIStatusBarHidden</key>
 	<false/>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer> <!-- 1 = iPhone only -->
+	</array>
+
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
