@@ -16,10 +16,15 @@ import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Ensure 'provider' is added in pubspec.yaml
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  // prefs.clear();
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -37,20 +42,54 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: lightTheme,
-        initialRoute: '/',
+        home: const CheckAuthPage(),
         routes: {
-          '/': (context) => OnboardPage(),
+          '/onboard': (context) => const OnboardPage(),
           '/pigpage': (context) => PigPage(),
           '/tigerpage': (context) => TigerPage(),
           '/penguinpage': (context) => PenguinPage(),
-          '/rootpage': (context) => RootPage(),
-          '/homepage': (context) => HomePage(),
-          '/namepage': (context) => NamePage(),
-          '/chatpage': (context) => ChatPage(),
-          '/emotionpage': (context) => EmotionPage(),
+          '/rootpage': (context) => const RootPage(),
+          '/homepage': (context) => const HomePage(),
+          '/namepage': (context) => const NamePage(),
+          '/chatpage': (context) => const ChatPage(),
+          '/emotionpage': (context) => const EmotionPage(),
           '/soulmatepage': (context) => SoulmatePage(),
         },
       ),
+    );
+  }
+}
+
+class CheckAuthPage extends StatelessWidget {
+  const CheckAuthPage({Key? key}) : super(key: key);
+
+  Future<Widget> _decideStartPage(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await userProvider.loadFromLocal();
+
+    print('userName: ${userProvider.userName}');
+    // userName이 저장되어 있으면 RootPage, 아니면 InitPage로
+    return userProvider.userName.isNotEmpty
+        ? const RootPage()
+        : const InitPage();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Widget>(
+      future: _decideStartPage(context),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // 로딩 중
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasData) {
+          return snapshot.data!;
+        } else {
+          return const InitPage(); // fallback
+        }
+      },
     );
   }
 }

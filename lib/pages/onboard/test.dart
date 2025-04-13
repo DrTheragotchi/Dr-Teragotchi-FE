@@ -1,5 +1,5 @@
+// OnboardingScreen - without background or Scaffold
 import 'dart:async';
-import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -9,7 +9,8 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> with TickerProviderStateMixin {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   Timer? _scrollTimer;
   double _scrollSpeed = 1.5;
@@ -18,23 +19,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
     'assets/pig/pig_happy.png',
     'assets/tiger/tiger_happy.png',
     'assets/dog/dog_happy.png',
-    'assets/hamstar/hamstar_happy.png',
+    'assets/hamster/hamster_happy.png',
   ];
 
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 2);
     });
-
     _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(
-          _scrollController.offset + _scrollSpeed,
-        );
-
+        _scrollController.jumpTo(_scrollController.offset + _scrollSpeed);
         final maxScroll = _scrollController.position.maxScrollExtent;
         if (_scrollController.offset >= maxScroll - 10) {
           _scrollController.jumpTo(maxScroll / 2);
@@ -58,97 +54,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
       (index) => _characters[index % _characters.length],
     );
 
-    return Scaffold(
-      body: ColorfulSafeArea(
-        top: false,
-        bottom: false,
-        child: Stack(
+    return SizedBox(
+      width: size.width,
+      height: size.height,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Background
-            Container(
-              height: size.height,
-              width: size.width,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/background/park.png'),
-                  fit: BoxFit.cover,
-                ),
+            const SizedBox(height: 20),
+            const Text(
+              'Set up your spirit animal \nwith just a few messages!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-            // Gradient overlay
-            Container(
-              height: size.height,
-              width: size.width,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.1),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+            const SizedBox(height: 20),
+            const Text(
+              'Your Spiritual Animal is here to help you',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                color: Color.fromRGBO(242, 242, 243, 0.702),
               ),
             ),
-            // Main content
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Set up your spirit animal \nwith just a few messages!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Your Spiritual Animal is here to help you',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Color.fromRGBO(242, 242, 243, 0.702),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _buildEmotionBubble('Sadness'),
-                        _buildEmotionBubble('depression'),
-                        _buildEmotionBubble('Angry'),
-                        _buildEmotionBubble('Anxiety'),
-                        _buildEmotionBubble('Happiness'),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      height: 250,
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: repeatedCharacters.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: _buildCharacter(repeatedCharacters[index]),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+            const SizedBox(height: 30),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _buildEmotionBubble('Sadness'),
+                _buildEmotionBubble('depression'),
+                _buildEmotionBubble('Angry'),
+                _buildEmotionBubble('Anxiety'),
+                _buildEmotionBubble('Happiness'),
+              ],
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              height: 250,
+              child: ListView.builder(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                itemCount: repeatedCharacters.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: _buildCharacter(repeatedCharacters[index]),
+                  );
+                },
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),

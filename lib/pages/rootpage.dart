@@ -1,8 +1,11 @@
+import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/pages/main/calendarpage.dart';
 import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/onboard/chatpage.dart';
 import 'package:emogotchi/pages/settingpage.dart';
+import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({Key? key}) : super(key: key);
@@ -15,13 +18,84 @@ class _RootPageState extends State<RootPage> {
   int _currentIndex = 1;
   bool _isChatMode = false;
 
+  bool _isDataReady = false;
+  Set<DateTime> _dataAvailableDays = {};
+  Map<String, Map<String, String>> _emotionAndSummaryByDate = {};
+  String _animalType = 'dog';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitialData());
+  }
+
+  Future<void> _loadInitialData() async {
+    final uuidProvider =
+        Provider.of<DeviceInfoProvider>(context, listen: false);
+    await uuidProvider.fetchDeviceUuid();
+    final uuid = uuidProvider.uuid;
+
+    if (uuid == null || uuid.isEmpty) return;
+
+    final api = ApiService();
+
+    try {
+      final entries = await api.getDiaryDates(uuid);
+      final Set<DateTime> tempDates = {};
+      final Map<String, Map<String, String>> tempData = {};
+
+      for (var entry in entries) {
+        final dateString = entry['date']!;
+        final parts = dateString.split('-');
+        final date = DateTime(
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+          int.parse(parts[2]),
+        );
+        tempDates.add(date);
+        tempData[dateString] = {
+          'emotion': entry['emotion']!,
+          'summary': entry['summary']!,
+        };
+      }
+
+      final userInfo = await api.getUser(uuid);
+      final type = userInfo['animal_type'] ?? 'dog';
+
+      setState(() {
+        _dataAvailableDays = tempDates;
+        _emotionAndSummaryByDate = tempData;
+        _animalType = type.toLowerCase();
+        _isDataReady = true;
+      });
+    } catch (e) {
+      print("Loading error: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isChatPage = _currentIndex == 1 && _isChatMode;
+    final isChatPage = _currentIndex == 1 && _isChatMode;
 
     Widget currentPage;
     if (_currentIndex == 0) {
-      currentPage = const CalendarPage();
+      if (_isDataReady) {
+        currentPage = CalendarPage(
+          dataAvailableDays: _dataAvailableDays,
+          emotionAndSummaryByDate: _emotionAndSummaryByDate,
+          animalType: _animalType,
+        );
+      } else {
+        currentPage = const HomePage();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('잠시만 기다려주세요. 데이터를 불러오는 중입니다.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        });
+      }
     } else if (_currentIndex == 2) {
       currentPage = const SettingPage();
     } else {

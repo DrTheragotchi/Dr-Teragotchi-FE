@@ -1,14 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_chat_bubble/bubble_type.dart';
+import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/components/chatbubble.dart';
 import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/pages/rootpage.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_chat_bubble/bubble_type.dart';
 
 class ChatPage extends StatefulWidget {
   final bool isInit;
@@ -25,8 +25,6 @@ class _ChatPageState extends State<ChatPage> {
 
   late String _uuid = '';
   late String _currentEmotion = '';
-  late String _currentAnimal = '';
-  late int _currentPoints = 0;
   bool _isThinking = false;
 
   final Map<String, List<String>> initMessages = {
@@ -65,49 +63,67 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _initializeChatSetup();
-  }
-
-  Future<void> _initializeChatSetup() async {
-    setState(() {
-      _isThinking = true;
-    });
-
-    final deviceInfoProvider =
-        Provider.of<DeviceInfoProvider>(context, listen: false);
-    final emotionProvider =
-        Provider.of<EmotionProvider>(context, listen: false);
-
-    await deviceInfoProvider.fetchDeviceUuid();
-    await emotionProvider.getEmotion();
-
-    if (!mounted) return;
-
-    final fetchedUuid = deviceInfoProvider.uuid;
-    final fetchedEmotion = emotionProvider.emotion;
-
-    if (fetchedUuid != null && fetchedEmotion != null) {
-      _uuid = fetchedUuid;
-      _currentEmotion = fetchedEmotion.toLowerCase();
-
-      final initMessagesList = initMessages[_currentEmotion] ?? [];
-      if (initMessagesList.isNotEmpty) {
-        final randomIndex = (initMessagesList.length * 0.5).toInt();
-
-        await Future.delayed(const Duration(seconds: 2)); // 생각 중 표시 시간
-
+    _isThinking = true;
+    _initialize().then((_) {
+      if (mounted) {
         setState(() {
           _isThinking = false;
-          _messages.add({
-            'sender': 'bot',
-            'text': initMessagesList[randomIndex],
-          });
-        });
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom();
         });
       }
+    });
+  }
+
+  Future<void> _initialize() async {
+    final deviceInfoProvider =
+        Provider.of<DeviceInfoProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    await deviceInfoProvider.fetchDeviceUuid();
+    if (!mounted) return;
+
+    _uuid = deviceInfoProvider.uuid ?? 'error';
+    final apiService = ApiService();
+    final response = await apiService.getUser(_uuid);
+
+    userProvider.setUserData(
+      uuid: response['uuid'] ?? userProvider.uuid,
+      emotion: response['animal_emotion'] ?? userProvider.emotion,
+      animal: (response['animal_type']?.toString().isNotEmpty ?? false)
+          ? response['animal_type']
+          : userProvider.animalType,
+      animalLevel:
+          response['animal_level']?.toString() ?? userProvider.animalLevel,
+      points: response['points'] ?? userProvider.points,
+      userName: response['nickname'] ?? userProvider.userName,
+      isNotified: response['is_notified'] ?? userProvider.isNotified,
+    );
+
+    _currentEmotion = userProvider.emotion.toLowerCase();
+
+    if (widget.isInit) {
+      final messages =
+          initMessages[_currentEmotion] ?? initMessages['neutral']!;
+      final randomIndex = (messages.length * 0.5).toInt();
+
+      setState(() {
+        _messages.add({
+          'sender': 'bot',
+          'text': messages[randomIndex],
+        });
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom();
+      });
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -118,9 +134,7 @@ class _ChatPageState extends State<ChatPage> {
       case '/soulmatepage':
         return SoulmatePage();
       default:
-        return const Scaffold(
-          body: Center(child: Text('Page not found')),
-        );
+        return const Scaffold(body: Center(child: Text('Page not found')));
     }
   }
 
@@ -129,33 +143,18 @@ class _ChatPageState extends State<ChatPage> {
     await Future.delayed(const Duration(seconds: 2));
     if (!context.mounted) return;
 
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            getPage(routeName),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
-  }
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.minScrollExtent, // reverse:true니까 min!
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    Navigator.of(context).push(PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          getPage(routeName),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 500),
+    ));
   }
 
   Future<void> _sendMessage() async {
-    final String message = _messageController.text.trim();
+    final message = _messageController.text.trim();
     if (message.isEmpty || _uuid.isEmpty) return;
 
     setState(() {
@@ -163,70 +162,37 @@ class _ChatPageState extends State<ChatPage> {
       _messageController.clear();
       _isThinking = true;
     });
-
     _scrollToBottom();
 
-    print("current emotion: $_currentEmotion");
+    final apiService = ApiService();
+    final response = await apiService.postMessage(
+      message,
+      _uuid,
+      _currentEmotion.toUpperCase(),
+    );
 
-    if (widget.isInit == false) {
-      setState(() {
-        _currentEmotion = '';
-      });
-    }
+    setState(() {
+      _isThinking = false;
+      _messages.add({'sender': 'bot', 'text': response['response'] ?? ''});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    try {
-      final apiService = ApiService();
-      final response = await apiService.postMessage(
-        message,
-        _uuid,
-        _currentEmotion.toUpperCase(),
-      );
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final updatedAnimal =
+        (response['animal']?.toString().trim().isNotEmpty ?? false)
+            ? response['animal']
+            : userProvider.animalType;
 
-      setState(() {
-        _isThinking = false;
-        _messages.add({'sender': 'bot', 'text': response['response'] ?? ''});
-      });
+    userProvider.setUserData(
+      emotion: response['emotion'] ?? userProvider.emotion,
+      animal: updatedAnimal,
+      points: response['points'] ?? userProvider.points,
+    );
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
-
-      print("Response: ${response['response']}");
-      print("Emotion: ${response['emotion']}");
-      print("Animal: ${response['animal']}");
-      print("Points: ${response['points']}");
-      print("isFifth: ${response['isFifth']}");
-
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-      final updatedAnimal = (response['animal'] ?? '').toString().trim().isEmpty
-          ? userProvider.animalType
-          : response['animal'];
-
-      userProvider.setUserData(
-        emotion: response['emotion'] ?? '',
-        animal: updatedAnimal,
-        points: response['points'] ?? 0,
-      );
-
-      print("User data updated");
-      // ✅ emotion과 animal이 있으면 SoulmatePage로 이동
-      if (response['animal'] == null && response['isFifth'] != false) {
-        await fadeTransitionToNamed(context, '/rootpage');
-      }
-
-      if (response['animal'] != null && response['isFifth'] != false) {
-        await fadeTransitionToNamed(context, '/soulmatepage');
-      }
-    } catch (e) {
-      setState(() {
-        _isThinking = false;
-        _messages.add({'sender': 'bot', 'text': 'Error: $e'});
-      });
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
+    if (response['animal'] == null && response['isFifth'] != false) {
+      await fadeTransitionToNamed(context, '/rootpage');
+    } else if (response['animal'] != null && response['isFifth'] != false) {
+      await fadeTransitionToNamed(context, '/soulmatepage');
     }
   }
 
@@ -260,7 +226,7 @@ class _ChatPageState extends State<ChatPage> {
                           : BubbleType.receiverBubble,
                       imageAsset: isUser
                           ? 'assets/penguin/penguin_happy.png'
-                          : "assets/doctor.png",
+                          : 'assets/doctor.png',
                       backgroundColor: isUser
                           ? const Color.fromARGB(255, 210, 235, 244)
                           : const Color.fromRGBO(243, 226, 180, 1),

@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/components/home_chat.dart';
 import 'package:emogotchi/provider/background_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
+import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -26,6 +28,7 @@ class _HomePageState extends State<HomePage>
   late String animalType;
   late String animalMood;
   late int points;
+  late String uuid;
   bool _isEyeOpen = true;
   Timer? _blinkTimer;
 
@@ -68,8 +71,10 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
+    _setupAnimation();
+  }
 
-    // 배경은 처음 앱 실행 시 한 번만 설정
+  void _setupAnimation() {
     final bgProvider = Provider.of<BackgroundProvider>(context, listen: false);
 
     if (bgProvider.selectedBackground == null) {
@@ -104,8 +109,11 @@ class _HomePageState extends State<HomePage>
     }
 
     final userInfoProvider = Provider.of<UserProvider>(context, listen: false);
-    animalMood = userInfoProvider.getEmotion;
-    animalType = userInfoProvider.getAnimalType;
+    final rawMood = userInfoProvider.getEmotion;
+    final rawType = userInfoProvider.getAnimalType;
+
+    animalMood = (rawMood.isEmpty) ? 'neutral' : rawMood;
+    animalType = (rawType.isEmpty) ? 'penguin' : rawType;
     points = userInfoProvider.getPoints;
 
     print('animalType: $animalType');

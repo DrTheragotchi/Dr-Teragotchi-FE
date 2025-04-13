@@ -1,3 +1,5 @@
+// main onboarding page with animated background
+import 'package:flutter/material.dart';
 import 'package:emogotchi/pages/onboard/test.dart';
 import 'package:emogotchi/pages/onboard/test2.dart';
 import 'package:emogotchi/pages/onboard/test3.dart';
@@ -18,6 +20,13 @@ class _OnboardPageState extends State<OnboardPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  final List<String> _backgroundImages = [
+    'assets/background/park.png',
+    'assets/background/lake.png',
+    'assets/background/airport.png',
+    'assets/background/school.png',
+  ];
+
   final List<Widget> _pages = [
     SettingPage(),
     OnboardingScreen(),
@@ -25,12 +34,6 @@ class _OnboardPageState extends State<OnboardPage> {
     BetterAnimalPage(),
     TigerPage(),
   ];
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   void _goToNextPage() {
     if (_currentPage < _pages.length - 1) {
@@ -41,17 +44,31 @@ class _OnboardPageState extends State<OnboardPage> {
       );
     } else {
       Navigator.pushNamed(context, '/namepage');
-      // TODO: 온보딩 끝났을 때 다음 화면으로 이동
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const InitPage()));
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            child: Image.asset(
+              _backgroundImages[_currentPage],
+              key: ValueKey(_backgroundImages[_currentPage]),
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          Container(color: Colors.black.withOpacity(0.3)),
           PageView(
             controller: _pageController,
             onPageChanged: (int page) {
@@ -59,56 +76,27 @@ class _OnboardPageState extends State<OnboardPage> {
             },
             children: _pages,
           ),
-          Positioned(
-            bottom: 60,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pages.length, (index) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 16 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.grey.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
-            ),
-          ),
-          if (_currentPage == _pages.length - 1)
+          if (_currentPage < _pages.length - 1)
             Positioned(
-              bottom: 20,
-              left: 40,
-              right: 40,
-              child: ElevatedButton(
-                onPressed: _goToNextPage,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  backgroundColor: Colors.black,
-                ),
-                child: const Text(
-                  'Start',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            )
-          else
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: IconButton(
-                onPressed: _goToNextPage,
-                icon: const Icon(Icons.arrow_forward_ios),
-                color: Colors.black,
+              bottom: 60,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_pages.length, (index) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: _currentPage == index ? 16 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? Colors.white
+                          : Colors.grey.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
               ),
             ),
         ],
