@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:emogotchi/components/Graph.dart';
 import 'dart:math' as math;
 
-class BetterAnimalPage extends StatefulWidget {
-  const BetterAnimalPage({super.key});
+class Onboarding3 extends StatefulWidget {
+  const Onboarding3({super.key});
 
   @override
-  State<BetterAnimalPage> createState() => _BetterAnimalPageState();
+  State<Onboarding3> createState() => _Onboarding3State();
 }
 
-class _BetterAnimalPageState extends State<BetterAnimalPage>
+class _Onboarding3State extends State<Onboarding3>
     with TickerProviderStateMixin {
   late final AnimationController _shakeController1;
   late final AnimationController _shakeController2;
@@ -82,7 +82,7 @@ class _BetterAnimalPageState extends State<BetterAnimalPage>
             const Text(
               'Break Emotional Barrier!',
               style: TextStyle(
-                fontSize: 25,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),

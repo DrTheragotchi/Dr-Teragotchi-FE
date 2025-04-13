@@ -8,14 +8,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:provider/provider.dart';
 
-class TigerPage extends StatefulWidget {
-  const TigerPage({super.key});
+class Onboarding4 extends StatefulWidget {
+  const Onboarding4({super.key});
 
   @override
-  State<TigerPage> createState() => _TigerPageState();
+  State<Onboarding4> createState() => _Onboarding4State();
 }
 
-class _TigerPageState extends State<TigerPage> {
+class _Onboarding4State extends State<Onboarding4> {
   final TextEditingController _nameController = TextEditingController();
   late String _uuid = '';
 
@@ -140,7 +140,8 @@ class _TigerPageState extends State<TigerPage> {
         SafeArea(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 0.0, vertical: 80),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -150,8 +151,8 @@ class _TigerPageState extends State<TigerPage> {
                     "What's your soul mate name?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white),
                   ),
                   const SizedBox(height: 20),
@@ -163,11 +164,10 @@ class _TigerPageState extends State<TigerPage> {
                   const SizedBox(height: 50),
                   Image.asset(
                     'assets/emoji/family.png',
-                    height: 250,
-                    width: 250,
+                    height: 300,
+                    width: 300,
                   ),
                   const Spacer(),
-                  const SizedBox(height: 160), // 공간 확보만!
                 ],
               ),
             ),
@@ -192,12 +192,11 @@ class _TigerPageState extends State<TigerPage> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
                   style: const TextStyle(fontSize: 20),
                   placeholderStyle:
-                      const TextStyle(fontSize: 20, color: Colors.black54),
+                      const TextStyle(fontSize: 20, color: Colors.black),
                   cursorColor: Colors.black,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey[200],
-                  ),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withOpacity(0.7)),
                   onSubmitted: _handleNext,
                 ),
               ],

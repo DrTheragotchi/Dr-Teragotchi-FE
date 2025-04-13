@@ -3,16 +3,19 @@ import 'package:provider/provider.dart';
 import 'package:flutter_chat_bubble/bubble_type.dart';
 import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/components/chatbubble.dart';
-import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/pages/rootpage.dart';
-import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
 
 class ChatPage extends StatefulWidget {
   final bool isInit;
-  const ChatPage({Key? key, this.isInit = false}) : super(key: key);
+  final String emotion;
+  const ChatPage({
+    Key? key,
+    this.isInit = false,
+    this.emotion = '',
+  }) : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -25,6 +28,7 @@ class _ChatPageState extends State<ChatPage> {
 
   late String _uuid = '';
   late String _currentEmotion = '';
+  late String _animalType = '';
   bool _isThinking = false;
 
   final Map<String, List<String>> initMessages = {
@@ -63,7 +67,10 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    print('💬 ChatPage initialized with emotion: ${widget.emotion}');
+    _currentEmotion = widget.emotion.toLowerCase(); // 감정 직접 세팅
     _isThinking = true;
+
     _initialize().then((_) {
       if (mounted) {
         setState(() {
@@ -82,12 +89,14 @@ class _ChatPageState extends State<ChatPage> {
     if (!mounted) return;
 
     _uuid = deviceInfoProvider.uuid ?? 'error';
+
     final apiService = ApiService();
     final response = await apiService.getUser(_uuid);
+    print('🔍 getUser Response: $response');
 
+    // 감정은 widget.emotion을 사용하므로 setUserData에서 emotion 제거
     userProvider.setUserData(
       uuid: response['uuid'] ?? userProvider.uuid,
-      emotion: response['animal_emotion'] ?? userProvider.emotion,
       animal: (response['animal_type']?.toString().isNotEmpty ?? false)
           ? response['animal_type']
           : userProvider.animalType,
@@ -98,7 +107,10 @@ class _ChatPageState extends State<ChatPage> {
       isNotified: response['is_notified'] ?? userProvider.isNotified,
     );
 
-    _currentEmotion = userProvider.emotion.toLowerCase();
+    print('UUID: ${userProvider.uuid}');
+    print('Animal Type: ${userProvider.animalType}');
+
+    _animalType = userProvider.animalType;
 
     if (widget.isInit) {
       final messages =
@@ -111,6 +123,7 @@ class _ChatPageState extends State<ChatPage> {
           'text': messages[randomIndex],
         });
       });
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
@@ -155,21 +168,24 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _sendMessage() async {
     final message = _messageController.text.trim();
-    if (message.isEmpty || _uuid.isEmpty) return;
+    if (message.isEmpty || _uuid.isEmpty) {
+      print("🚫 Cannot send: message or uuid is empty");
+      return;
+    }
 
-    setState(() {
-      _messages.add({'sender': 'user', 'text': message});
-      _messageController.clear();
-      _isThinking = true;
-    });
-    _scrollToBottom();
+    print("📨 Sending message...");
+    print("🆔 uuid = $_uuid");
+    print("💬 message = $message");
+    print("😶 emotion = ${widget.emotion}");
 
     final apiService = ApiService();
     final response = await apiService.postMessage(
       message,
       _uuid,
-      _currentEmotion.toUpperCase(),
+      widget.emotion.toUpperCase(),
     );
+
+    print('🔍 getUser Response: $response'); // 여기!
 
     setState(() {
       _isThinking = false;
