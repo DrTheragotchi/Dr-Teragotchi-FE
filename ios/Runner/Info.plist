@@ -45,7 +45,7 @@
 	<false/>
 	<key>UIDeviceFamily</key>
 	<array>
-		<integer>1</integer> <!-- 1 = iPhone only -->
+		<integer>1</integer> 
 	</array>
 
 	<key>UISupportedInterfaceOrientations</key>
