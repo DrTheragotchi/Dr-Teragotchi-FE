@@ -1,5 +1,5 @@
+// OnboardingScreen - without background or Scaffold
 import 'dart:async';
-import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -9,7 +9,8 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   Timer? _scrollTimer;
   double _scrollSpeed = 1.5;
@@ -24,18 +25,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-
-    // 시작 시 살짝 앞으로 이동
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 2);
     });
-
     _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(
-          _scrollController.offset + _scrollSpeed,
-        );
-
+        _scrollController.jumpTo(_scrollController.offset + _scrollSpeed);
         final maxScroll = _scrollController.position.maxScrollExtent;
         if (_scrollController.offset >= maxScroll - 10) {
           _scrollController.jumpTo(maxScroll / 2);
@@ -55,99 +50,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final repeatedCharacters = List.generate(
-      50, // 많이 반복해서 무제한처럼 보이게 함
+      50,
       (index) => _characters[index % _characters.length],
     );
 
-    return Scaffold(
-      body: ColorfulSafeArea(
-        top: false,
-        bottom: false,
-        child: Stack(
+    return SizedBox(
+      width: size.width,
+      height: size.height,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              height: size.height,
-              width: size.width,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/background/park.png'),
-                  fit: BoxFit.cover,
-                ),
+            const SizedBox(height: 20),
+            const Text(
+              'Set up your spirit animal \nwith just a few messages!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-            Container(
-              height: size.height,
-              width: size.width,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.1),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+            const SizedBox(height: 20),
+            const Text(
+              'Your Spiritual Animal is here to help you',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                color: Color.fromRGBO(242, 242, 243, 0.702),
               ),
             ),
-            SingleChildScrollView(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 0.0, vertical: 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 50),
-                    const Text(
-                      'how we set up for your spirit animal with 5 questions',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'your spiritual animal is here to help you',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _buildEmotionBubble('Sadness'),
-                        _buildEmotionBubble('depression'),
-                        _buildEmotionBubble('Angry'),
-                        _buildEmotionBubble('Anxiety'),
-                        _buildEmotionBubble('Happiness'),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      height: 250,
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: repeatedCharacters.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: _buildCharacter(repeatedCharacters[index]),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+            const SizedBox(height: 30),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _buildEmotionBubble('Sadness'),
+                _buildEmotionBubble('depression'),
+                _buildEmotionBubble('Angry'),
+                _buildEmotionBubble('Anxiety'),
+                _buildEmotionBubble('Happiness'),
+              ],
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              height: 250,
+              child: ListView.builder(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                itemCount: repeatedCharacters.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: _buildCharacter(repeatedCharacters[index]),
+                  );
+                },
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -155,18 +117,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildEmotionBubble(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.black87,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+    late final AnimationController controller;
+    late final Animation<Offset> animation;
+
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    animation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0.05, 0),
+    ).chain(CurveTween(curve: Curves.elasticIn)).animate(controller);
+
+    return GestureDetector(
+      onTap: () async {
+        await controller.forward();
+        await controller.reverse();
+      },
+      child: SlideTransition(
+        position: animation,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );

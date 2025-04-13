@@ -7,6 +7,7 @@ import 'package:emogotchi/pages/onboard/nickname.dart';
 import 'package:emogotchi/pages/onboard/onboard.dart';
 import 'package:emogotchi/pages/onboard/pig.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
+import 'package:emogotchi/pages/onboard/test3.dart';
 import 'package:emogotchi/pages/onboard/tiger.dart';
 import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/pages/rootpage.dart';
