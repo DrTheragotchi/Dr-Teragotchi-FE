@@ -135,8 +135,6 @@ class _TigerPageState extends State<TigerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final theme = Theme.of(context);
     return Stack(
       children: [
         SafeArea(

@@ -70,7 +70,7 @@ class CheckAuthPage extends StatelessWidget {
     print('userName: ${userProvider.userName}');
     // userName이 저장되어 있으면 RootPage, 아니면 InitPage로
     return userProvider.userName.isNotEmpty
-        ? const RootPage()
+        ? const OnboardPage()
         : const InitPage();
   }
 

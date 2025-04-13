@@ -24,10 +24,10 @@ class _OnboardPageState extends State<OnboardPage> {
   ];
 
   final List<Widget> _pages = [
+    TigerPage(),
     OnboardingScreen(),
     OnboardingApp2(),
     BetterAnimalPage(),
-    TigerPage(),
   ];
 
   void _goToNextPage() {
