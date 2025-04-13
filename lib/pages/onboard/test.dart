@@ -18,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'assets/pig/pig_happy.png',
     'assets/tiger/tiger_happy.png',
     'assets/dog/dog_happy.png',
-    'assets/hamstar/hamstar_happy.png',
+    'assets/hamster/hamster_happy.png',
   ];
 
   @override
