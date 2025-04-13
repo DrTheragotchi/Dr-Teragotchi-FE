@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:emogotchi/api/api.dart';
+import 'package:emogotchi/provider/background_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -42,229 +45,293 @@ class CalendarPage extends StatelessWidget {
     DateTime focusedDay = DateTime.now(); // 🔹 상태로 분리
     CalendarFormat calendarFormat = CalendarFormat.month;
 
+    final selectedBackground =
+        Provider.of<BackgroundProvider>(context).selectedBackground ??
+            'assets/background/airport.png';
+
     return StatefulBuilder(
       builder: (context, setState) {
         final today = DateTime.now();
 
-        return SafeArea(
-          child: GestureDetector(
-            onVerticalDragUpdate: (details) {
-              if (details.delta.dy > 8 &&
-                  calendarFormat != CalendarFormat.month) {
-                setState(() {
-                  calendarFormat = CalendarFormat.month;
-                });
-              }
-            },
-            child: Column(
-              children: [
-                TableCalendar(
-                  firstDay: DateTime(2024, 1, 1),
-                  lastDay: DateTime(2025, 12, 31),
-                  focusedDay: focusedDay, // 🔹 수정
-                  calendarFormat: calendarFormat,
-                  eventLoader: (day) => [],
-                  availableCalendarFormats: const {
-                    CalendarFormat.month: 'Month',
-                    CalendarFormat.week: 'Week',
-                  },
-                  startingDayOfWeek: StartingDayOfWeek.sunday,
-                  headerStyle: const HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                    titleTextStyle: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  selectedDayPredicate: (day) =>
-                      selectedDay != null && _isSameDay(day, selectedDay!),
-                  onDaySelected: (selected, focused) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              selectedBackground,
+              fit: BoxFit.cover,
+            ),
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // 흐림 정도 조절
+              child: Container(
+                color: Colors.black.withOpacity(0.05), // 약간 어둡게 (선택 사항)
+              ),
+            ),
+            SafeArea(
+              child: GestureDetector(
+                onVerticalDragUpdate: (details) {
+                  if (details.delta.dy > 8 &&
+                      calendarFormat != CalendarFormat.month) {
                     setState(() {
-                      selectedDay = selected;
-                      focusedDay = focused; // 🔹 주간 이동 반영
-                      calendarFormat = CalendarFormat.week;
+                      calendarFormat = CalendarFormat.month;
                     });
-                  },
-                  calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (context, day, _) =>
-                        _buildDayCell(day, selectedDay, today, false, false),
-                    todayBuilder: (context, day, _) =>
-                        _buildDayCell(day, selectedDay, today, true, false),
-                    selectedBuilder: (context, day, _) =>
-                        _buildDayCell(day, selectedDay, today, false, true),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(20),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                  }
+                },
+                child: Column(
+                  children: [
+                    TableCalendar(
+                      firstDay: DateTime(2024, 1, 1),
+                      lastDay: DateTime(2025, 12, 31),
+                      focusedDay: focusedDay, // 🔹 수정
+                      calendarFormat: calendarFormat,
+
+                      eventLoader: (day) => [],
+                      availableCalendarFormats: const {
+                        CalendarFormat.month: 'Month',
+                        CalendarFormat.week: 'Week',
+                      },
+                      startingDayOfWeek: StartingDayOfWeek.sunday,
+                      headerStyle: const HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        titleTextStyle: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      selectedDayPredicate: (day) =>
+                          selectedDay != null && _isSameDay(day, selectedDay!),
+                      onDaySelected: (selected, focused) {
+                        setState(() {
+                          selectedDay = selected;
+                          focusedDay = focused; // 🔹 주간 이동 반영
+                          calendarFormat = CalendarFormat.week;
+                        });
+                      },
+                      daysOfWeekStyle: const DaysOfWeekStyle(
+                        weekdayStyle: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        weekendStyle: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      calendarBuilders: CalendarBuilders(
+                        defaultBuilder: (context, day, _) => _buildDayCell(
+                            day, selectedDay, today, false, false),
+                        todayBuilder: (context, day, _) =>
+                            _buildDayCell(day, selectedDay, today, true, false),
+                        selectedBuilder: (context, day, _) =>
+                            _buildDayCell(day, selectedDay, today, false, true),
+                      ),
                     ),
-                    child: Center(
-                      child: selectedDay == null
-                          ? const Text(
-                              'Select a date',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                    const SizedBox(height: 30),
+                    (selectedDay == null)
+                        ? SizedBox.shrink()
+                        : Expanded(
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.all(20),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    color: Colors.grey[300]!, width: 1),
                               ),
-                              textAlign: TextAlign.center,
-                            )
-                          : SingleChildScrollView(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (_isSameDay(selectedDay!, today)) // 오늘 선택
-                                    _isDataAvailable(today)
-                                        ? Text(
-                                            _getSummary(today),
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          )
-                                        : Column(
-                                            children: [
-                                              ElevatedButton(
-                                                onPressed: () async {
-                                                  final uuidProvider = Provider
-                                                      .of<DeviceInfoProvider>(
-                                                          context,
-                                                          listen: false);
-                                                  await uuidProvider
-                                                      .fetchDeviceUuid();
-                                                  final uuid =
-                                                      uuidProvider.uuid;
+                              child: Center(
+                                child: selectedDay == null
+                                    ? const SizedBox()
+                                    : SingleChildScrollView(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            if (_isSameDay(
+                                                selectedDay!, today)) // 오늘 선택
+                                              _isDataAvailable(today)
+                                                  ? Text(
+                                                      _getSummary(today),
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    )
+                                                  : Column(
+                                                      children: [
+                                                        ElevatedButton(
+                                                          onPressed: () async {
+                                                            final uuidProvider =
+                                                                Provider.of<
+                                                                        DeviceInfoProvider>(
+                                                                    context,
+                                                                    listen:
+                                                                        false);
+                                                            await uuidProvider
+                                                                .fetchDeviceUuid();
+                                                            final uuid =
+                                                                uuidProvider
+                                                                    .uuid;
 
-                                                  if (uuid == null ||
-                                                      uuid.isEmpty) {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                          content: Text(
-                                                              "UUID를 불러올 수 없습니다.")),
-                                                    );
-                                                    return;
-                                                  }
+                                                            if (uuid == null ||
+                                                                uuid.isEmpty) {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                const SnackBar(
+                                                                    content: Text(
+                                                                        "UUID를 불러올 수 없습니다.")),
+                                                              );
+                                                              return;
+                                                            }
 
-                                                  try {
-                                                    final api = ApiService();
-                                                    final diary = await api
-                                                        .generateDiary(uuid);
+                                                            try {
+                                                              final api =
+                                                                  ApiService();
+                                                              final diary =
+                                                                  await api
+                                                                      .generateDiary(
+                                                                          uuid);
 
-                                                    final generatedDate =
-                                                        diary['date'];
-                                                    final summary =
-                                                        diary['summary'];
-                                                    final emotion =
-                                                        diary['emotion'];
+                                                              final generatedDate =
+                                                                  diary['date'];
+                                                              final summary =
+                                                                  diary[
+                                                                      'summary'];
+                                                              final emotion =
+                                                                  diary[
+                                                                      'emotion'];
 
-                                                    final parts = generatedDate
-                                                        .split('-');
-                                                    final dateTime = DateTime(
-                                                      int.parse(parts[0]),
-                                                      int.parse(parts[1]),
-                                                      int.parse(parts[2]),
-                                                    );
+                                                              final parts =
+                                                                  generatedDate
+                                                                      .split(
+                                                                          '-');
+                                                              final dateTime =
+                                                                  DateTime(
+                                                                int.parse(
+                                                                    parts[0]),
+                                                                int.parse(
+                                                                    parts[1]),
+                                                                int.parse(
+                                                                    parts[2]),
+                                                              );
 
-                                                    setState(() {
-                                                      dataAvailableDays
-                                                          .add(dateTime);
-                                                      emotionAndSummaryByDate[
-                                                          generatedDate] = {
-                                                        'summary': summary,
-                                                        'emotion': emotion,
-                                                      };
-                                                    });
-                                                  } catch (e) {
-                                                    print(
-                                                        "Diary generation error: $e");
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        return AlertDialog(
-                                                          title: const Text(
-                                                              "Error"),
-                                                          content: const Text(
-                                                              "Failed to generate the journal."),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                              },
-                                                              child: const Text(
-                                                                  "OK"),
+                                                              setState(() {
+                                                                dataAvailableDays
+                                                                    .add(
+                                                                        dateTime);
+                                                                emotionAndSummaryByDate[
+                                                                    generatedDate] = {
+                                                                  'summary':
+                                                                      summary,
+                                                                  'emotion':
+                                                                      emotion,
+                                                                };
+                                                              });
+                                                            } catch (e) {
+                                                              print(
+                                                                  "Diary generation error: $e");
+                                                              showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    (context) {
+                                                                  return AlertDialog(
+                                                                    title: const Text(
+                                                                        "Error"),
+                                                                    content:
+                                                                        const Text(
+                                                                            "Failed to generate the journal."),
+                                                                    actions: [
+                                                                      TextButton(
+                                                                        onPressed:
+                                                                            () {
+                                                                          Navigator.of(context)
+                                                                              .pop();
+                                                                        },
+                                                                        child: const Text(
+                                                                            "OK"),
+                                                                      ),
+                                                                    ],
+                                                                  );
+                                                                },
+                                                              );
+                                                            }
+                                                          },
+                                                          style: ElevatedButton
+                                                              .styleFrom(
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .blueAccent,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        24,
+                                                                    vertical:
+                                                                        12),
+                                                          ),
+                                                          child: const Text(
+                                                            'Generate Journal',
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              color:
+                                                                  Colors.white,
                                                             ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    );
-                                                  }
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      Colors.blueAccent,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 24,
-                                                      vertical: 12),
-                                                ),
-                                                child: const Text(
-                                                  'Generate Journal',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              const Text(
-                                                'Automatically generated daily at midnight',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                  else // 오늘 아닌 날짜
-                                    _isDataAvailable(selectedDay!)
-                                        ? Text(
-                                            _getSummary(selectedDay!),
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          )
-                                        : Text(
-                                            "You don't have a journal on ${_formatDate(selectedDay!)}",
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                ],
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 10),
+                                                        const Text(
+                                                          'Automatically generated daily at midnight',
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: Colors.black,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                            else // 오늘 아닌 날짜
+                                              _isDataAvailable(selectedDay!)
+                                                  ? Text(
+                                                      _getSummary(selectedDay!),
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    )
+                                                  : Text(
+                                                      "You don't have a journal on ${_formatDate(selectedDay!)}",
+                                                      style: const TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                          ],
+                                        ),
+                                      ),
                               ),
                             ),
-                    ),
-                  ),
+                          ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );
@@ -333,7 +400,7 @@ class CalendarPage extends StatelessWidget {
               child: Text(
                 '${day.day}',
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),

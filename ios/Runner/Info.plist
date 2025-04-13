@@ -32,6 +32,11 @@
 	<string>We use notifications to remind you about your Emogotchi!</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+	<string>mailto</string>
+	</array>
+
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

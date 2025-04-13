@@ -87,50 +87,84 @@ class _Onboarding4State extends State<Onboarding4> {
     }
   }
 
-  void _handleNext(String value) {
-    if (_nameController.text.trim().isEmpty) {
-      HapticFeedback.lightImpact();
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          icon: const Icon(Icons.warning, color: Colors.redAccent),
-          title: const Text('What is your name?'),
-          content: const Text('You must enter your name to continue.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+  void _showNameRequiredDialog(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('What is your name?'),
+        content: Column(
+          children: [
+            const SizedBox(height: 10),
+            Image.asset('assets/penguin/penguin_eye_open.png',
+                height: 100), // 🐧 원하는 이미지 경로
+            const SizedBox(height: 10),
+            const Text('You must enter your name to continue.'),
+          ],
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK', style: TextStyle(color: Colors.black)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmNameDialog(BuildContext context, String inputName) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Is this name correct?'),
+        content: Column(
+          children: [
+            const SizedBox(height: 10),
+            Image.asset('assets/penguin/penguin_eye_close.png', height: 100),
+            const SizedBox(height: 10),
+            Text(
+              '"$inputName"',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
-      );
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('No', style: TextStyle(color: Colors.black)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('Yes'),
+            onPressed: () {
+              Navigator.pop(context);
+              sendUserInfo(); // ✅ 함수 호출
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleNext(String value) {
+    if (_nameController.text.trim().isEmpty) {
+      HapticFeedback.lightImpact();
+      _showNameRequiredDialog(context);
+
       return;
     }
 
     final inputName = _nameController.text.trim();
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Is this name correct?"),
-        content: Text('"$inputName"'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // 팝업 닫기만
-            },
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // 팝업 닫기
-              sendUserInfo(); // 다음 페이지로
-            },
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    );
+    _showConfirmNameDialog(context, inputName);
+
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+
+    // Dismiss the keyboard
+    FocusScope.of(context).unfocus();
   }
 
   @override

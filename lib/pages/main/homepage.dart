@@ -328,13 +328,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     print('points: $points');
 
     if (animalMood == 'neutral' && _blinkTimer == null) {
-      _blinkTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (mounted) {
-          setState(() {
-            _isEyeOpen = !_isEyeOpen;
-          });
-        }
-      });
+      _startBlinking();
     }
 
     if (uuid.isNotEmpty) {
@@ -372,15 +366,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  void _startBlinking() {
+    void blink() {
+      if (!mounted) return;
+
+      // 눈 상태 바꾸기
+      setState(() {
+        _isEyeOpen = !_isEyeOpen;
+      });
+
+      // 눈 감았다가 빠르게 뜨기 (200~300ms 후 다시 깜빡임 시작)
+      Future.delayed(
+          Duration(
+              milliseconds: _isEyeOpen ? Random().nextInt(3000) + 2000 : 150),
+          () {
+        blink();
+      });
+    }
+
+    blink(); // 처음 호출
+  }
+
   Widget _animalImage({bool animated = true}) {
     String imagePath;
 
     // ✅ 진화 여부 정확하게 판단
     bool isEvolved = level >= 5 || _showEvolvedAnimal;
-
     if (!isEvolved) {
-      imagePath =
-          'assets/${animalType}_egg/${animalType}_egg_${animalMood}.png';
+      if (animalMood == 'neutral') {
+        final eyeState = _isEyeOpen ? 'eye_open' : 'eye_close';
+        imagePath = 'assets/${animalType}_egg/${animalType}_egg_$eyeState.png';
+      } else {
+        imagePath =
+            'assets/${animalType}_egg/${animalType}_egg_${animalMood}.png';
+      }
     } else if (animalMood == 'neutral') {
       final eyeState = _isEyeOpen ? 'eye_open' : 'eye_close';
       imagePath = 'assets/$animalType/${animalType}_$eyeState.png';
@@ -400,7 +419,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             AnimatedBuilder(
               animation: _evolutionJumpController,
               builder: (context, _) {
-                double jumpOffset = -20 * _evolutionJumpController.value;
+                double bounce = sin(_controller.value * pi * 2); // 주기적인 bounce
+                double jumpOffset = -12 * bounce.abs(); // 절댓값으로 위로만 튀도록
                 return Transform.translate(
                   offset: Offset(0, jumpOffset),
                   child: image,
@@ -646,7 +666,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         child: const Padding(
                           padding: EdgeInsets.only(left: 10),
                           child: Text(
-                            "-20",
+                            "-40",
                             style: TextStyle(
                               color: Colors.redAccent,
                               fontSize: 16,
@@ -666,7 +686,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             bottom: 295,
             left: 0,
             right: 0,
-            child: points >= 20
+            child: points >= 40
                 ? (_isReady)
                     ? FadeTransition(
                         opacity: _fadeAnimation,
@@ -676,7 +696,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               HapticFeedback.mediumImpact();
                               if (points >= 20 && riceLevel < 10) {
                                 setState(() {
-                                  points -= 20;
+                                  points -= 40;
                                   showMinusTwenty = true;
                                 });
                                 _minusTwentyController.forward(from: 0);
@@ -740,7 +760,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     : const SizedBox.shrink(),
           ),
           Positioned(
-            bottom: 105,
+            bottom: 115,
             left: 0,
             right: 0,
             child: Center(

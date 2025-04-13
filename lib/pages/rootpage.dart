@@ -2,10 +2,12 @@ import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/pages/main/calendarpage.dart';
 import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/onboard/chatpage.dart';
-import 'package:emogotchi/pages/settingpage.dart';
+import 'package:emogotchi/pages/setting/settingpage.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({Key? key}) : super(key: key);
@@ -23,6 +25,7 @@ class _RootPageState extends State<RootPage> {
   Map<String, Map<String, String>> _emotionAndSummaryByDate = {};
   String _animalType = 'dog';
   String _nickname = ''; // ✅ 추가
+  int _level = 0;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _RootPageState extends State<RootPage> {
     if (uuid == null || uuid.isEmpty) return;
 
     final api = ApiService();
+    final prefs = await SharedPreferences.getInstance();
 
     try {
       final entries = await api.getDiaryDates(uuid);
@@ -63,6 +67,9 @@ class _RootPageState extends State<RootPage> {
       final userInfo = await api.getUser(uuid); // ✅ 닉네임도 받아오기
       final type = userInfo['animal_type'] ?? 'dog';
       final nickname = userInfo['nickname'] ?? '';
+      final level = userInfo['level'] ?? 0;
+
+      final shouldAutoOpenChat = prefs.getBool('shouldAutoOpenChat') ?? false;
 
       setState(() {
         _dataAvailableDays = tempDates;
@@ -71,6 +78,14 @@ class _RootPageState extends State<RootPage> {
         _nickname = nickname; // ✅ 저장
         _isDataReady = true;
       });
+      if (shouldAutoOpenChat) {
+        prefs.setBool('shouldAutoOpenChat', false); // ✅ 리셋
+
+        setState(() {
+          _isChatMode = true; // ✅ ChatPage로 전환!
+          _currentIndex = 1;
+        });
+      }
     } catch (e) {
       print("Loading error: $e");
     }
@@ -103,6 +118,7 @@ class _RootPageState extends State<RootPage> {
       currentPage = SettingPage(
         animalType: _animalType,
         nickname: _nickname,
+        level: _level,
       );
     } else {
       currentPage = _isChatMode ? const ChatPage() : const HomePage();
@@ -148,7 +164,14 @@ class _RootPageState extends State<RootPage> {
                   showSelectedLabels: false,
                   items: [
                     const BottomNavigationBarItem(
-                      icon: Icon(Icons.calendar_today),
+                      icon: Icon(
+                        FeatherIcons.calendar,
+                        color: Colors.black,
+                      ),
+                      activeIcon: Icon(
+                        FeatherIcons.calendar,
+                        color: Colors.white,
+                      ),
                       label: '캘린더',
                     ),
                     BottomNavigationBarItem(
@@ -179,10 +202,10 @@ class _RootPageState extends State<RootPage> {
                         child: Center(
                           child: Icon(
                             (_currentIndex == 0 || _currentIndex == 2)
-                                ? Icons.home
-                                : Icons.add,
+                                ? FeatherIcons.home
+                                : FeatherIcons.messageCircle,
                             color: (_currentIndex == 0 || _currentIndex == 2)
-                                ? Colors.white
+                                ? Colors.white.withOpacity(0.5)
                                 : Colors.white,
                             size: 30,
                           ),
@@ -191,7 +214,14 @@ class _RootPageState extends State<RootPage> {
                       label: '홈/일기',
                     ),
                     const BottomNavigationBarItem(
-                      icon: Icon(Icons.settings),
+                      icon: Icon(
+                        FeatherIcons.settings,
+                        color: Colors.black,
+                      ),
+                      activeIcon: Icon(
+                        FeatherIcons.settings,
+                        color: Colors.white,
+                      ),
                       label: '설정',
                     ),
                   ],

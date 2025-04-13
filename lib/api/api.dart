@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://3eb4-64-92-84-106.ngrok-free.app";
+  final String baseUrl = "https://f10e-64-92-84-106.ngrok-free.app";
 
   Future<Map<String, dynamic>> postOnboarding(
       String uuid, String nickname) async {
