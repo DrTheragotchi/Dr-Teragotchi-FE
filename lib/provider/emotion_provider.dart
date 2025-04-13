@@ -7,6 +7,7 @@ class EmotionProvider with ChangeNotifier {
 
   void setEmotion(String newEmotion) {
     _emotion = newEmotion;
+    print('🔄 Emotion set to: $_emotion'); // 디버깅용 로그
     notifyListeners();
   }
 

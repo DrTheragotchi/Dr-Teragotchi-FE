@@ -1,13 +1,9 @@
 // main onboarding page with animated background
 import 'package:flutter/material.dart';
-import 'package:emogotchi/pages/onboard/test.dart';
-import 'package:emogotchi/pages/onboard/test2.dart';
-import 'package:emogotchi/pages/onboard/test3.dart';
-import 'package:emogotchi/pages/settingpage.dart';
-import 'package:flutter/material.dart';
-import 'package:emogotchi/pages/onboard/penguin.dart';
-import 'package:emogotchi/pages/onboard/pig.dart';
-import 'package:emogotchi/pages/onboard/tiger.dart';
+import 'package:emogotchi/pages/onboard/onboarding1.dart';
+import 'package:emogotchi/pages/onboard/onboarding2.dart';
+import 'package:emogotchi/pages/onboard/onboarding3.dart';
+import 'package:emogotchi/pages/onboard/onboarding4.dart';
 
 class OnboardPage extends StatefulWidget {
   const OnboardPage({super.key});
@@ -28,10 +24,10 @@ class _OnboardPageState extends State<OnboardPage> {
   ];
 
   final List<Widget> _pages = [
-    TigerPage(),
-    OnboardingScreen(),
-    OnboardingApp2(),
-    BetterAnimalPage(),
+    Onboarding1(),
+    Onboarding2(),
+    Onboarding3(),
+    Onboarding4(),
   ];
 
   void _goToNextPage() {

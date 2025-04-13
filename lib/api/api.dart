@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://46e8-64-92-84-106.ngrok-free.app";
+  final String baseUrl = "https://b7cd-64-92-84-106.ngrok-free.app";
 
   Future<Map<String, dynamic>> postOnboarding(
       String uuid, String nickname) async {
@@ -24,37 +24,42 @@ class ApiService {
   Future<Map<String, dynamic>> postMessage(
       String message, String userUuid, String emotion) async {
     final url = Uri.parse('$baseUrl/chat');
-    print("Sending message: $message");
-    print("User UUID: $userUuid");
-    print("Emotion: $emotion");
+
+    final payload = {
+      'message': message,
+      'uuid': userUuid,
+      'emotion': emotion,
+    };
+
+    print("📤 Sending POST to $url");
+    print("📦 JSON Payload: ${jsonEncode(payload)}");
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'message': message,
-          'uuid': userUuid,
-          'emotion': emotion,
-        }),
+        body: jsonEncode(payload),
       );
 
       if (response.statusCode == 200 || response.statusCode == 500) {
         final decoded = utf8.decode(response.bodyBytes);
         final responseData = jsonDecode(decoded);
 
+        print("✅ Response Data: $responseData");
+
         return {
           'response': responseData['response'] ?? '',
-          'emotion': responseData['emotion'], // may be null
-          'animal': responseData['animal'], // may be null
+          'emotion': responseData['emotion'],
+          'animal': responseData['animal'],
           'points': responseData['points'],
           'isFifth': responseData['isFifth'] ?? false,
         };
       } else {
+        print("❌ Failed with status code: ${response.statusCode}");
         throw Exception('Failed to post message: ${response.statusCode}');
       }
     } catch (e) {
-      print("Error occurred: $e");
+      print("🔥 Error occurred: $e");
       throw Exception('Error posting message: $e');
     }
   }
@@ -140,6 +145,29 @@ class ApiService {
     } catch (e) {
       print("Error occurred: $e");
       throw Exception('Error generating diary: $e');
+    }
+  }
+
+  Future<void> updateUserPoints(String uuid, int points) async {
+    final url =
+        Uri.parse('$baseUrl/user/update/points?uuid=$uuid&points=$points');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Points updated successfully");
+      } else {
+        throw Exception(
+          'Failed to update user points (status ${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      print("Error occurred: $e");
+      throw Exception('Error updating user points: $e');
     }
   }
 }

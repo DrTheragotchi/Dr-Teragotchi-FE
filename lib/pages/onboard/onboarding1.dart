@@ -2,14 +2,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+class Onboarding1 extends StatefulWidget {
+  const Onboarding1({Key? key}) : super(key: key);
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<Onboarding1> createState() => _Onboarding1State();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen>
+class _Onboarding1State extends State<Onboarding1>
     with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   Timer? _scrollTimer;

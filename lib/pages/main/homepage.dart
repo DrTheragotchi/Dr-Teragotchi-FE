@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/components/home_chat.dart';
+import 'package:emogotchi/pages/onboard/chatpage.dart';
 import 'package:emogotchi/provider/background_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
-import 'package:emogotchi/provider/uuid_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -27,8 +28,11 @@ class _HomePageState extends State<HomePage>
   /* ------------------------------ */
   late String animalType;
   late String animalMood;
-  late int points;
-  late String uuid;
+  int points = 0;
+  int level = 0;
+  int riceLevel = 0;
+  int streak = 0;
+  String uuid = '';
   bool _isEyeOpen = true;
   Timer? _blinkTimer;
 
@@ -72,6 +76,37 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _setupAnimation();
+    _setup();
+  }
+
+  Future<void> _setup() async {
+    final prefs = await SharedPreferences.getInstance();
+    uuid = prefs.getString('uuid') ?? '';
+
+    print('📦 로컬에서 불러온 uuid: $uuid');
+
+    if (uuid.isNotEmpty) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final response = await ApiService().getUser(uuid.trim());
+
+      userProvider.setUserData(
+        uuid: response['uuid'] ?? uuid,
+        emotion: response['animal_emotion'] ?? userProvider.emotion,
+        animal: response['animal_type'] ?? userProvider.animalType,
+        animalLevel:
+            response['animal_level']?.toString() ?? userProvider.animalLevel,
+        points: response['points'] ?? userProvider.points,
+        userName: response['nickname'] ?? userProvider.userName,
+        isNotified: response['is_notified'] ?? userProvider.isNotified,
+      );
+
+      setState(() {
+        animalMood = response['animal_emotion'] ?? 'neutral';
+        animalType = response['animal_type'] ?? 'penguin';
+        points = response['points'] ?? 0;
+        level = int.tryParse(response['animal_level']?.toString() ?? '') ?? 1;
+      });
+    }
   }
 
   void _setupAnimation() {
@@ -127,6 +162,27 @@ class _HomePageState extends State<HomePage>
             _isEyeOpen = !_isEyeOpen;
           });
         }
+      });
+    }
+
+    if (uuid.isNotEmpty) {
+      ApiService().getUser(uuid).then((response) {
+        print('User data: $response');
+        userInfoProvider.setUserData(
+          uuid: response['uuid'] ?? uuid,
+          emotion: response['animal_emotion'] ?? userInfoProvider.emotion,
+          animal: response['animal_type'] ?? userInfoProvider.animalType,
+          animalLevel: response['animal_level']?.toString() ??
+              userInfoProvider.animalLevel,
+          points: response['points'] ?? userInfoProvider.points,
+          userName: response['nickname'] ?? userInfoProvider.userName,
+          isNotified: response['is_notified'] ?? userInfoProvider.isNotified,
+        );
+        setState(() {
+          animalMood = response['animal_emotion'] ?? 'neutral';
+          animalType = response['animal_type'] ?? 'penguin';
+          points = response['points'] ?? 0;
+        });
       });
     }
   }
@@ -235,7 +291,7 @@ class _HomePageState extends State<HomePage>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: LinearProgressIndicator(
-                              value: 0.5,
+                              value: riceLevel / 5,
                               minHeight: 15,
                               backgroundColor: Colors.grey.withOpacity(0.3),
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -262,9 +318,11 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
                 const SizedBox(height: 6),
-                StatusButton(false),
+                StatusButton(false, points),
                 const SizedBox(height: 6),
-                StatusButton(true),
+                StatusButton(true, level),
+                const SizedBox(height: 6),
+                StatusButton(true, streak),
               ],
             ),
           ),
@@ -272,19 +330,81 @@ class _HomePageState extends State<HomePage>
             bottom: 295,
             left: 0,
             right: 0,
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.mediumImpact();
-                startAnimalAnimation();
-                Navigator.pushNamed(context, '/chatpage', arguments: {
-                  'emotion': '',
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: HomeChatBubble(text: selectedMessage),
-              ),
-            ),
+            child: points >= 20
+                ? Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orangeAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                      onPressed: () async {
+                        if (points >= 20 && riceLevel < 10) {
+                          setState(() {
+                            points -= 20;
+                            riceLevel += 1;
+                          });
+
+                          try {
+                            await ApiService().updateUserPoints(uuid, points);
+                            print("🎯 서버에 포인트 반영 완료: $points");
+                          } catch (e) {
+                            print("❌ 포인트 업데이트 실패: $e");
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("서버에 포인트 업데이트 중 문제가 발생했어요."),
+                              ),
+                            );
+                          }
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text("🍚 밥 레벨이 올라갔어요! 현재 레벨: $riceLevel"),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      child: Text(
+                        "🍚 Feed (-20 Coins)",
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                  )
+                : GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      startAnimalAnimation();
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          settings: RouteSettings(
+                            name: '/chatpage',
+                            arguments: {
+                              'emotion': '',
+                            },
+                          ),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  ChatPage(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(
+                                opacity: animation, child: child);
+                          },
+                          transitionDuration: const Duration(milliseconds: 500),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: HomeChatBubble(text: selectedMessage),
+                    ),
+                  ),
           ),
           Positioned(
             bottom: 105,
@@ -303,7 +423,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget StatusButton(bool isStreak, {String value = '10'}) {
+  Widget StatusButton(bool isStreak, int value) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.7),
@@ -336,7 +456,7 @@ class _HomePageState extends State<HomePage>
           ),
           const SizedBox(width: 4),
           Text(
-            value,
+            value.toString(),
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black,

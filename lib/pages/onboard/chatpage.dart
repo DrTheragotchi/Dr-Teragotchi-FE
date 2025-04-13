@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_chat_bubble/bubble_type.dart';
 import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/components/chatbubble.dart';
-import 'package:emogotchi/pages/main/homepage.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
 import 'package:emogotchi/pages/rootpage.dart';
-import 'package:emogotchi/provider/emotion_provider.dart';
 import 'package:emogotchi/provider/user_provider.dart';
 import 'package:emogotchi/provider/uuid_provider.dart';
+import 'package:typewritertext/typewritertext.dart';
 
 class ChatPage extends StatefulWidget {
   final bool isInit;
-  const ChatPage({Key? key, this.isInit = false}) : super(key: key);
+  final String emotion;
+  const ChatPage({
+    Key? key,
+    this.isInit = false,
+    this.emotion = '',
+  }) : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -25,7 +30,9 @@ class _ChatPageState extends State<ChatPage> {
 
   late String _uuid = '';
   late String _currentEmotion = '';
+  late String _animalType = '';
   bool _isThinking = false;
+  String? _nextRoute;
 
   final Map<String, List<String>> initMessages = {
     "happy": [
@@ -63,12 +70,23 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    _currentEmotion = widget.emotion.toLowerCase();
     _isThinking = true;
     _initialize().then((_) {
       if (mounted) {
         setState(() {
           _isThinking = false;
         });
+        final messages =
+            initMessages[_currentEmotion] ?? initMessages['neutral']!;
+        final selectedMessage = messages[(messages.length * 0.5).toInt()];
+        setState(() {
+          _messages.add({
+            'sender': 'bot',
+            'text': selectedMessage,
+          });
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
     });
   }
@@ -82,13 +100,11 @@ class _ChatPageState extends State<ChatPage> {
     if (!mounted) return;
 
     _uuid = deviceInfoProvider.uuid ?? 'error';
-    final apiService = ApiService();
-    final response = await apiService.getUser(_uuid);
+    final response = await ApiService().getUser(_uuid);
 
     userProvider.setUserData(
       uuid: response['uuid'] ?? userProvider.uuid,
-      emotion: response['animal_emotion'] ?? userProvider.emotion,
-      animal: (response['animal_type']?.toString().isNotEmpty ?? false)
+      animal: response['animal_type']?.toString().isNotEmpty == true
           ? response['animal_type']
           : userProvider.animalType,
       animalLevel:
@@ -97,24 +113,7 @@ class _ChatPageState extends State<ChatPage> {
       userName: response['nickname'] ?? userProvider.userName,
       isNotified: response['is_notified'] ?? userProvider.isNotified,
     );
-
-    _currentEmotion = userProvider.emotion.toLowerCase();
-
-    if (widget.isInit) {
-      final messages =
-          initMessages[_currentEmotion] ?? initMessages['neutral']!;
-      final randomIndex = (messages.length * 0.5).toInt();
-
-      setState(() {
-        _messages.add({
-          'sender': 'bot',
-          'text': messages[randomIndex],
-        });
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
-    }
+    _animalType = userProvider.animalType;
   }
 
   void _scrollToBottom() {
@@ -125,32 +124,6 @@ class _ChatPageState extends State<ChatPage> {
         curve: Curves.easeOut,
       );
     }
-  }
-
-  Widget getPage(String routeName) {
-    switch (routeName) {
-      case '/rootpage':
-        return const RootPage();
-      case '/soulmatepage':
-        return SoulmatePage();
-      default:
-        return const Scaffold(body: Center(child: Text('Page not found')));
-    }
-  }
-
-  Future<void> fadeTransitionToNamed(
-      BuildContext context, String routeName) async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (!context.mounted) return;
-
-    Navigator.of(context).push(PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          getPage(routeName),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-      transitionDuration: const Duration(milliseconds: 500),
-    ));
   }
 
   Future<void> _sendMessage() async {
@@ -164,11 +137,10 @@ class _ChatPageState extends State<ChatPage> {
     });
     _scrollToBottom();
 
-    final apiService = ApiService();
-    final response = await apiService.postMessage(
+    final response = await ApiService().postMessage(
       message,
       _uuid,
-      _currentEmotion.toUpperCase(),
+      widget.emotion.toUpperCase(),
     );
 
     setState(() {
@@ -179,21 +151,32 @@ class _ChatPageState extends State<ChatPage> {
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final updatedAnimal =
-        (response['animal']?.toString().trim().isNotEmpty ?? false)
+        response['animal']?.toString().trim().isNotEmpty == true
             ? response['animal']
             : userProvider.animalType;
-
     userProvider.setUserData(
       emotion: response['emotion'] ?? userProvider.emotion,
       animal: updatedAnimal,
       points: response['points'] ?? userProvider.points,
     );
 
-    if (response['animal'] == null && response['isFifth'] != false) {
-      await fadeTransitionToNamed(context, '/rootpage');
-    } else if (response['animal'] != null && response['isFifth'] != false) {
-      await fadeTransitionToNamed(context, '/soulmatepage');
+    if (response['isFifth'] != false) {
+      setState(() {
+        _nextRoute = response['animal'] == null ? '/rootpage' : '/soulmatepage';
+      });
     }
+  }
+
+  Future<void> fadeTransitionToNamed(
+      BuildContext context, String routeName) async {
+    Navigator.of(context).push(PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          routeName == '/rootpage' ? const RootPage() : SoulmatePage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 500),
+    ));
   }
 
   @override
@@ -214,11 +197,14 @@ class _ChatPageState extends State<ChatPage> {
                   final reversedIndex = _messages.length - 1 - index;
                   final message = _messages[reversedIndex];
                   final isUser = message['sender'] == 'user';
-
+                  final isLastBotMessage = !isUser &&
+                      reversedIndex ==
+                          _messages.lastIndexWhere((m) => m['sender'] == 'bot');
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: CustomChatBubble(
-                      message: message['text'] ?? '',
+                      key: ValueKey(message['text']),
+                      message: isLastBotMessage ? '' : message['text'] ?? '',
                       alignment:
                           isUser ? Alignment.topRight : Alignment.topLeft,
                       bubbleType: isUser
@@ -230,6 +216,16 @@ class _ChatPageState extends State<ChatPage> {
                       backgroundColor: isUser
                           ? const Color.fromARGB(255, 210, 235, 244)
                           : const Color.fromRGBO(243, 226, 180, 1),
+                      child: isLastBotMessage
+                          ? TrueTypewriterText(
+                              key: ValueKey(message['text']),
+                              text: message['text'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.4,
+                              ),
+                            )
+                          : null,
                     ),
                   );
                 },
@@ -239,55 +235,92 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
       ),
-      bottomSheet: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Express your feelings...',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
+      bottomSheet: _nextRoute != null
+          ? Padding(
+              padding: const EdgeInsets.only(
+                  left: 15, right: 15, bottom: 30, top: 15),
+              child: GestureDetector(
+                onTap: () async {
+                  fadeTransitionToNamed(context, _nextRoute!);
+                  HapticFeedback.mediumImpact();
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  height: 60,
+                  width: MediaQuery.of(context).size.width - 80,
+                  decoration: BoxDecoration(
+                      color: Colors.blueAccent,
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'DONE',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                " * Share your feelings with Emogotchi to navigate your emotions.",
-                style: TextStyle(fontSize: 10, color: Colors.grey),
               ),
-            ),
-            const SizedBox(height: 15),
-          ],
+            )
+          : _buildTextFieldArea(),
+    );
+  }
+
+  Widget _buildTextFieldArea() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
         ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Express your feelings...',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
+                    ),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _sendMessage(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              " * Share your feelings with Emogotchi to navigate your emotions.",
+              style: TextStyle(fontSize: 10, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 15),
+        ],
       ),
     );
   }

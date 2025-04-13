@@ -1,15 +1,10 @@
 import 'package:emogotchi/const/theme/theme.dart';
 import 'package:emogotchi/pages/main/homepage.dart';
-import 'package:emogotchi/pages/initpage.dart';
 import 'package:emogotchi/pages/onboard/chatpage.dart';
 import 'package:emogotchi/pages/onboard/emotionpage.dart';
 import 'package:emogotchi/pages/onboard/nickname.dart';
 import 'package:emogotchi/pages/onboard/onboard.dart';
-import 'package:emogotchi/pages/onboard/pig.dart';
 import 'package:emogotchi/pages/onboard/soulmatepage.dart';
-import 'package:emogotchi/pages/onboard/test3.dart';
-import 'package:emogotchi/pages/onboard/tiger.dart';
-import 'package:emogotchi/pages/onboard/penguin.dart';
 import 'package:emogotchi/pages/rootpage.dart';
 import 'package:emogotchi/provider/background_provider.dart';
 import 'package:emogotchi/provider/emotion_provider.dart';
@@ -45,9 +40,6 @@ class MyApp extends StatelessWidget {
         home: const CheckAuthPage(),
         routes: {
           '/onboard': (context) => const OnboardPage(),
-          '/pigpage': (context) => PigPage(),
-          '/tigerpage': (context) => TigerPage(),
-          '/penguinpage': (context) => PenguinPage(),
           '/rootpage': (context) => const RootPage(),
           '/homepage': (context) => const HomePage(),
           '/namepage': (context) => const NamePage(),
@@ -70,8 +62,8 @@ class CheckAuthPage extends StatelessWidget {
     print('userName: ${userProvider.userName}');
     // userName이 저장되어 있으면 RootPage, 아니면 InitPage로
     return userProvider.userName.isNotEmpty
-        ? const OnboardPage()
-        : const InitPage();
+        ? const RootPage()
+        : const OnboardPage();
   }
 
   @override
@@ -87,7 +79,7 @@ class CheckAuthPage extends StatelessWidget {
         } else if (snapshot.hasData) {
           return snapshot.data!;
         } else {
-          return const InitPage(); // fallback
+          return const OnboardPage(); // fallback
         }
       },
     );

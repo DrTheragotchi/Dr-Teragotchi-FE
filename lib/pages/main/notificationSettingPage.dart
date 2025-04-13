@@ -45,9 +45,10 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
       time.minute,
     );
 
-    final tz.TZDateTime nextInstance = scheduled.isBefore(tz.TZDateTime.now(tz.local))
-        ? scheduled.add(const Duration(days: 1))
-        : scheduled;
+    final tz.TZDateTime nextInstance =
+        scheduled.isBefore(tz.TZDateTime.now(tz.local))
+            ? scheduled.add(const Duration(days: 1))
+            : scheduled;
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       0,
@@ -167,10 +168,10 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         ),
         actions: [
           CupertinoDialogAction(
-             child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.black), // ✅ Make Cancel text black
-          ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.black), // ✅ Make Cancel text black
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           CupertinoDialogAction(
