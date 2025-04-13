@@ -198,11 +198,17 @@ class _ChatPageState extends State<ChatPage> {
       print("isFifth: ${response['isFifth']}");
 
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      final updatedAnimal = (response['animal'] ?? '').toString().trim().isEmpty
+          ? userProvider.animalType
+          : response['animal'];
+
       userProvider.setUserData(
         emotion: response['emotion'] ?? '',
-        animal: response['animal'] ?? '',
+        animal: updatedAnimal,
         points: response['points'] ?? 0,
       );
+
       print("User data updated");
       // ✅ emotion과 animal이 있으면 SoulmatePage로 이동
       if (response['animal'] == null && response['isFifth'] != false) {
