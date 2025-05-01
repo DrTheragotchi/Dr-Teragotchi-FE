@@ -30,6 +30,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool showMinusTwenty = false;
   late AnimationController _minusTwentyController;
   late Animation<double> _minusTwentyFade;
+  late AnimationController _riceShakeController;
+  late Animation<double> _riceShakeAnimation;
 
   /* ------------------------------ */
   late String animalType;
@@ -150,6 +152,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
+    );
+    _riceShakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _riceShakeAnimation = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _riceShakeController, curve: Curves.elasticIn),
     );
 
     _setupAnimation();
@@ -532,6 +542,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _bottomfettiController.dispose();
     _blinkTimer?.cancel();
     _fadeController.dispose(); // 👈 이것도 잊지 말기
+    _riceShakeController.dispose();
+
     super.dispose();
   }
 
@@ -699,13 +711,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   points -= 40;
                                   showMinusTwenty = true;
                                 });
+
+                                _riceShakeController.forward(from: 0); // 떨림 시작
+
                                 _minusTwentyController.forward(from: 0);
                                 Future.delayed(
                                     const Duration(milliseconds: 800), () {
                                   if (mounted)
                                     setState(() => showMinusTwenty = false);
                                 });
-                                _triggerRiceEffect(); // 여기서 이펙트 실행
+
+                                _triggerRiceEffect();
                                 try {
                                   await ApiService()
                                       .updateUserPoints(uuid.trim(), points);
@@ -714,10 +730,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 }
                               }
                             },
-                            child: Image.asset(
-                              'assets/homepage/rice.png',
-                              height: 110,
-                              width: 100,
+                            child: AnimatedBuilder(
+                              animation: _riceShakeController,
+                              builder: (context, child) {
+                                return Transform.translate(
+                                  offset: Offset(
+                                    sin(_riceShakeAnimation.value * pi * 2) * 8,
+                                    0,
+                                  ),
+                                  child: child,
+                                );
+                              },
+                              child: Image.asset(
+                                'assets/homepage/rice.png',
+                                height: 110,
+                                width: 100,
+                              ),
                             ),
                           ),
                         ),

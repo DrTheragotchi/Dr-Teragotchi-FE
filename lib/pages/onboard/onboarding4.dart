@@ -114,36 +114,46 @@ class _Onboarding4State extends State<Onboarding4> {
   void _showConfirmNameDialog(BuildContext context, String inputName) {
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Is this name correct?'),
-        content: Column(
-          children: [
-            const SizedBox(height: 10),
-            Image.asset('assets/penguin/penguin_eye_close.png', height: 100),
-            const SizedBox(height: 10),
-            Text(
-              '"$inputName"',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      builder: (context) => CupertinoTheme(
+        // ⛳ 여기! data가 아니라 직접 theme 매개변수 사용
+
+        data: const CupertinoThemeData(
+          brightness: Brightness.light,
+          primaryColor: Colors.black,
+          scaffoldBackgroundColor: Colors.white,
+          barBackgroundColor: Colors.white,
+        ),
+        child: CupertinoAlertDialog(
+          title: const Text('Is this name correct?'),
+          content: Column(
+            children: [
+              const SizedBox(height: 10),
+              Image.asset('assets/penguin/penguin_eye_close.png', height: 100),
+              const SizedBox(height: 10),
+              Text(
+                '"$inputName"',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('No', style: TextStyle(color: Colors.black)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.pop(context);
+                sendUserInfo();
+              },
             ),
           ],
         ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('No', style: TextStyle(color: Colors.black)),
-            onPressed: () => Navigator.pop(context),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: const Text('Yes'),
-            onPressed: () {
-              Navigator.pop(context);
-              sendUserInfo(); // ✅ 함수 호출
-            },
-          ),
-        ],
       ),
     );
   }

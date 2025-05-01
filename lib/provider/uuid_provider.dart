@@ -28,13 +28,19 @@ class DeviceInfoProvider with ChangeNotifier {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       newUuid = iosInfo.identifierForVendor; // iOS unique ID
     } else {
-      newUuid = "Unsupported Platform";
-    }
+      if (Platform.isMacOS) {
+        MacOsDeviceInfo macInfo = await deviceInfo.macOsInfo;
+        newUuid = macInfo.systemGUID; // macOS unique ID
+      } else if (Platform.isWindows) {
+        WindowsDeviceInfo windowsInfo = await deviceInfo.windowsInfo;
+        newUuid = windowsInfo.productName; // Windows unique ID
+      }
 
-    if (_uuid != newUuid) {
-      _uuid = newUuid;
-      // print("Updated UUID: $_uuid");
-      notifyListeners();
+      if (_uuid != newUuid) {
+        _uuid = newUuid;
+        // print("Updated UUID: $_uuid");
+        notifyListeners();
+      }
     }
   }
 }

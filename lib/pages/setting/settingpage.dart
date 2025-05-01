@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:emogotchi/api/api.dart';
 import 'package:emogotchi/pages/setting/changeNickname.dart';
 import 'package:emogotchi/provider/background_provider.dart';
 import 'package:flutter/material.dart';
@@ -155,9 +156,19 @@ class _SettingPageState extends State<SettingPage> {
                 'Delete',
                 style: TextStyle(color: Colors.red),
               ),
-              onPressed: () {
-                // Place your turn-off or delete logic here if desired
-                Navigator.pop(context); // Close the dialog
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final uuid = prefs.getString('uuid') ?? '';
+
+                // 🔥 서버에서 유저 삭제 요청
+                await ApiService().deleteUser(uuid);
+
+                // 🧼 로컬 데이터 초기화 (필수는 아님, 원하면 유지해도 됨)
+                await prefs.clear();
+
+                // ✅ 삭제 후 온보딩 페이지로 이동 (기존 라우트 모두 제거)
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/onboard', (route) => false);
               },
             ),
           ],
