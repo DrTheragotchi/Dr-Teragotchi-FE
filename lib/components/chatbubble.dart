@@ -148,7 +148,7 @@ class TrueTypewriterText extends StatefulWidget {
     Key? key,
     required this.text,
     required this.style,
-    this.charDuration = const Duration(milliseconds: 40),
+    this.charDuration = const Duration(milliseconds: 10),
   }) : super(key: key);
 
   @override

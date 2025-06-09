@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://3eb4-64-92-84-106.ngrok-free.app";
+  final String baseUrl = "https://cb07-64-92-84-106.ngrok-free.app";
 
   Future<Map<String, dynamic>> postOnboarding(
       String uuid, String nickname) async {
@@ -215,6 +215,28 @@ class ApiService {
     } catch (e) {
       log("Error occurred: $e");
       throw Exception('Error updating user name: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteUser(String uuid) async {
+    final url = Uri.parse('$baseUrl/user/$uuid');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+          'Failed to delete user (status ${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      log("Error occurred: $e");
+      throw Exception('Error deleting user: $e');
     }
   }
 }
